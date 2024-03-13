@@ -35,6 +35,7 @@ usethis::use_git()
 
 ## Install the required dev dependencies ----
 golem::install_dev_deps()
+golem::use_recommended_deps()
 
 ## Create Common Files ----
 ## See ?usethis for more information
@@ -56,7 +57,7 @@ golem::use_recommended_tests()
 
 ## Favicon ----
 # If you want to change the favicon (default is golem's one)
-golem::use_favicon() # path = "path/to/ico". Can be an online file.
+golem::use_favicon('inst/app/www/uw_icon.png') # path = "path/to/ico". Can be an online file.
 # golem::remove_favicon() # Uncomment to remove the default favicon
 
 ## Add helper functions ----

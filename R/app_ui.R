@@ -10,7 +10,20 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
     fluidPage(
-      h1("SurveyPrevRshiny")
+      titlePanel("Small Area Estimation in LMIC"),
+      sidebarLayout(
+        sidebarPanel(
+          mod_data_input_ui("Dat_Input")
+        ),
+        mainPanel(
+          tabsetPanel(type = "tabs",
+                      mod_data_display_ui("Dat_Display"),
+                      mod_data_display_ui("Dat_Display2")
+                      # Invoke other UI modules here
+          )
+        )
+      )
+
     )
   )
 }
@@ -30,7 +43,7 @@ golem_add_external_resources <- function() {
   )
 
   tags$head(
-    favicon(),
+    favicon(ext = 'png'),
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "SurveyPrevRshiny"

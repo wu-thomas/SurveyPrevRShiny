@@ -17,11 +17,16 @@
 ## Amend DESCRIPTION with dependencies read from package code parsing
 ## install.packages('attachment') # if needed.
 attachment::att_amend_desc()
+usethis::use_package("pkgload")
+
+#usethis::use_dev_package("richardli/surveyPrev")
+#usethis::use_dev_package("richardli/SUMMER")
+
 
 ## Add modules ----
 ## Create a module infrastructure in R/
-golem::add_module(name = "name_of_module1", with_test = TRUE) # Name of the module
-golem::add_module(name = "name_of_module2", with_test = TRUE) # Name of the module
+golem::add_module(name = "data_input", with_test = F) # Name of the module
+golem::add_module(name = "data_display", with_test = F) # Name of the module
 
 ## Add helper functions ----
 ## Creates fct_* and utils_*
