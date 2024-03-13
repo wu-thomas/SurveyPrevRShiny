@@ -25,8 +25,14 @@ usethis::use_package("pkgload")
 
 ## Add modules ----
 ## Create a module infrastructure in R/
-golem::add_module(name = "data_input", with_test = F) # Name of the module
+
+## add module and functions for data input panel
+golem::add_module(name = "data_input", with_test = F,
+                  fct = "helpers",
+                  utils = "helpers")
+
 golem::add_module(name = "data_display", with_test = F) # Name of the module
+golem::add_module(name = "data_input_util", with_test = F) # Name of the module
 
 ## Add helper functions ----
 ## Creates fct_* and utils_*

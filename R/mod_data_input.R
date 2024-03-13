@@ -7,28 +7,17 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-#'
 mod_data_input_ui <- function(id){
   ns <- NS(id)
   tagList(
     tabPanel("Raw Data",
              h4("Data Input"),
-             tabsetPanel(type = "tabs",
-                         tabPanel("Upload Data",
-                                  div(style = "margin-top: 10px;",
-                                  fileInput(ns("dataFile"), "Upload your dataset (CSV)"),
-                                  actionButton(ns("uploadData"), "Submit Data")
-                                  )
-                         ),
-                         tabPanel("Enter Credentials",
-                                  div(style = "margin-top: 10px;",
-                                  textInput(ns("username"), "Username"),
-                                  textInput(ns("ProjectTitle"), "ProjectTitle"),
-                                  passwordInput(ns("password"), "Password"),
-                                  actionButton(ns("downloadData"), "Download From DHS website")
-                                  )
-                         )
-             )
+             #div(style = "margin-top: 10px;",
+             selectInput(ns("country"), "Choose a country", rdhs::dhs_countries()[['CountryName']]),
+             selectInput(ns("Svy_year"), "Choose survey year", choices = c("2010","2011")),
+             fileInput(ns("dataFile"), "Upload your dataset (CSV)"),
+             actionButton(ns("uploadData"), "Submit Data")
+
     )
   )
 }
@@ -37,8 +26,24 @@ mod_data_input_ui <- function(id){
 #'
 #' @noRd
 mod_data_input_server <- function(id){
-  moduleServer( id, function(input, output, session){
+  moduleServer(id, function(input, output, session){
     ns <- session$ns
+
+    svy_years_avail <- reactive({
+      if(is.null(input$country) || input$country == ""){
+        return(character(0)) # Return an empty character vector if no country is selected
+      }
+      get_survey_year(input$country)
+    })
+
+    # Correctly observe the change in country selection
+    observeEvent(input$country, {
+      freezeReactiveValue(input, "Svy_year")
+      updateSelectInput(inputId = "Svy_year", choices = svy_years_avail())
+    })
+
+
+
 
   })
 }
