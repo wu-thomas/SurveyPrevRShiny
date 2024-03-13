@@ -3,7 +3,7 @@ Title: PKG_TITLE
 Version: 0.0.0.9000
 Authors@R: person('Yunhan', 'Wu', email = 'yunhanwu@uw.edu', role = c('cre', 'aut'))
 Description: PKG_DESC.
-License: What license is it under?
+License: MIT + file LICENSE
 Imports: 
     config (>= 0.3.2),
     golem (>= 0.4.1),
