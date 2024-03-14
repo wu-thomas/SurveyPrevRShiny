@@ -17,39 +17,47 @@ get_survey_year <- function(country=NULL){
 }
 
 ###############################################################
-###  Given a zip file, unzip and find the dta to load
-###########################################################l####
+###  Given a zip file, unzip and find the correct extension
+###############################################################
 
-find_zip_path <- function(uploaded_file=NULL){
+find_zip_path_extension <- function(uploaded_file = NULL, extensions = c(".DTA", ".dta")) {
+  if (is.null(uploaded_file)) {
+    return(NULL)
+  }
 
-  file.path <- uploaded_file$datapath
-
+  file_path <- uploaded_file$datapath
   temp <- tempfile()
+  unzip(file_path, exdir = temp)
 
-  unzip(file.path, exdir = temp)
+  # Use lapply to iterate over extensions and find files for each extension
+  files_list <- lapply(extensions, function(ext) {
+    # Create regex pattern for the current extension
+    pattern <- gsub("\\.", "\\\\.", ext) # Escape dot for regex
+    list.files(temp, recursive = TRUE, pattern = pattern, full.names = TRUE)
+  })
 
-  # Assuming the first .DAT file in the zip is one we want
-  files <- c(list.files(temp,recursive = TRUE, "\\.DTA$",full.names = TRUE),
-             list.files(temp,recursive = TRUE, "\\.dta$",full.names = TRUE)
-  )
+  # Flatten the list and remove empty elements
+  files <- unlist(files_list)
+  files <- files[files != ""]
 
-  if(length(files)<1){
+  if (length(files) < 1) {
     return(NULL)
   }
 
   return(files[1])
-
 }
 
+
+
 ###############################################################
-###  determine the file path for loading
+###  determine the file path for loading DHS survey data
 ###############################################################
 
 find_svy_dat_path <- function(uploaded_file=NULL){
 
   ext <- tools::file_ext(uploaded_file$name)
   path_found <- switch(ext,
-                       zip = find_zip_path(uploaded_file=uploaded_file),
+                       zip = find_zip_path_extension(uploaded_file=uploaded_file),
                        dta = uploaded_file$datapath,
                        DTA = uploaded_file$datapath)
                        #validate("Invalid file; Please upload a .zip or .dta file")
@@ -61,6 +69,47 @@ find_svy_dat_path <- function(uploaded_file=NULL){
 
 }
 
+
+###############################################################
+###  determine the file path for loading DHS GPS data
+###############################################################
+
+find_svy_GPS_path <- function(uploaded_file=NULL){
+
+  ext <- tools::file_ext(uploaded_file$name)
+  path_found <- switch(ext,
+                       zip = find_zip_path_extension(uploaded_file=uploaded_file,
+                                                     extensions = c(".shp")),
+                       shp = uploaded_file$datapath)
+
+  return(path_found)
+
+}
+
+
+###############################################################
+###  load DHS GPS data
+###############################################################
+
+if(FALSE){
+file.path <- 'E:/Dropbox/YunhanJon/Fertility-Analysis/Scripts/Madagascar/contraceptive_usage/ZM_2018_DHS_03142024_31_143411.zip'
+file.path <- 'E:/Dropbox/YunhanJon/Fertility-Analysis/Scripts/Madagascar/contraceptive_usage/ZMGE71FL/ZMGE71FL.shp'
+file.path <- 'E:/Dropbox/YunhanJon/Fertility-Analysis/Scripts/Madagascar/contraceptive_usage/ZM_2018_DHS_03132024_2146_143411.zip'
+
+temp <- tempfile()
+
+unzip(file.path, exdir = temp)
+
+files <- list.files(temp,recursive = TRUE, "\\.shp$",full.names = TRUE)
+shp <- rgdal::readOGR(files, verbose = FALSE)
+
+
+shp <- sf::st_as_sf(shp)
+
+unzip(input$upload$datapath)
+shp <- rgdal::readOGR(paste(getwd(), list.files(pattern = "*.shp$"), sep="/"), verbose = FALSE)
+shp <- sf::st_as_sf(shp)
+}
 
 
 ###############################################################

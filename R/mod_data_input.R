@@ -50,7 +50,7 @@ mod_data_input_ui <- function(id){
 
 
              ### upload survey GPS
-             fileInput(ns("Svy_GPSFile"), with_red_star("Upload DHS GPS data (Stata format, .zip or .DTA)")),
+             fileInput(ns("Svy_GPSFile"), with_red_star("Upload DHS GPS data (shapefile, .zip or .shp)")),
              actionButton(ns("upload_Svy_GPS"), "Submit GPS Data"),
              tableOutput(ns("Svy_GPS_alert"))
     )
@@ -83,7 +83,7 @@ mod_data_input_server <- function(id){
     })
 
     ###############################################################
-    ### load DHS data into the system, accept .zip or .dta
+    ### load DHS data into the system, accept .zip or .DTA
     ###############################################################
 
     ### Check if the file has the right extension
@@ -156,6 +156,85 @@ mod_data_input_server <- function(id){
       }else{error_wall()}
 
     })
+
+
+
+    ###############################################################
+    ### load DHS GPS into the system, accept .zip or .shp
+    ###############################################################
+
+    ### Check if the file has the right extension
+
+    observeEvent(input$Svy_GPSFile, {
+      req(input$Svy_GPSFile)
+
+      ext <- tools::file_ext(input$Svy_GPSFile$name)
+      svy_GPS_correct_ext <- ext %in% c('zip', 'shp')
+
+      shinyFeedback::feedbackWarning("Svy_GPSFile", !svy_GPS_correct_ext, "Supported file types: .zip, .shp")
+    })
+
+
+    ### read in shape file
+
+    svy_GPS_data <- eventReactive(input$upload_Svy_GPS, {
+
+      # Check if a file has been uploaded
+      if (is.null(input$Svy_GPSFile)) {
+        showNoFileSelectedModal()
+        return()
+      }
+
+      req(input$Svy_GPSFile)
+
+      # double check file extension
+      ext <- tools::file_ext(input$Svy_GPSFile$name)
+      svy_GPS_correct_ext <- ext %in% c('zip', 'shp')
+
+      # give warning if not
+      if(!svy_GPS_correct_ext){
+        shinyFeedback::feedbackWarning("Svy_GPSFile", !svy_GPS_correct_ext, "Supported file types: .zip, .shp")
+      }
+
+      # load stata file with progress bar
+      withProgress(message = "Processing survey GPS data... This might take a moment... \n",
+                   detail = "Unzipping file...", value = 0, {
+
+                     Sys.sleep(2)
+                     incProgress(1/3)
+                     path_found <- find_svy_GPS_path(uploaded_file=input$Svy_GPSFile)
+
+                     if(is.null(path_found)){
+                       shinyFeedback::feedbackWarning("Svy_GPSFile", is.null(path_found),
+                                                      "Wrong .zip file, not containing shp data")
+                       return()
+                     }
+
+
+                     Sys.sleep(2) # Simulate delay
+                     incProgress(1/3,detail = "Reading shapefile...")
+                     data <- suppressWarnings(rgdal::readOGR(path_found, verbose = FALSE))
+                     #data <- zmb.ex.dat
+
+                     Sys.sleep(2) # Simulate delay
+                     incProgress(1/3, detail = "Finalizing...")
+                     return(data)
+
+                   })
+    })
+
+    ### indicate success
+    output$Svy_GPS_alert <- renderUI({
+
+      req(svy_GPS_data())
+
+      if(dim(svy_GPS_data())[1]>0) {
+        success_wall(successMessage="Survey GPS data upload successful")
+      }else{error_wall()}
+
+    })
+
+
 
 
   })
