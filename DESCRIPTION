@@ -10,8 +10,9 @@ BugReports: https://github.com/wu-thomas/SurveyPrevRShiny/issues
 Imports: 
     config (>= 0.3.2),
     golem (>= 0.4.1),
-    pkgload,
-    shiny (>= 1.7.4)
+    rdhs,
+    shiny (>= 1.7.4),
+    tools
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
