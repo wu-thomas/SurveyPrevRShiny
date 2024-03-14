@@ -12,6 +12,7 @@ Imports:
     golem (>= 0.4.1),
     rdhs,
     shiny (>= 1.7.4),
+    shinyFeedback,
     tools
 Suggests: 
     testthat (>= 3.0.0)

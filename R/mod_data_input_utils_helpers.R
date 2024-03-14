@@ -34,7 +34,7 @@ find_zip_path <- function(uploaded_file=NULL){
   )
 
   if(length(files)<1){
-    return(validate("Wrong .zip file, not containing Stata Format"))
+    return(NULL)
   }
 
   return(files[1])
@@ -51,10 +51,10 @@ find_svy_dat_path <- function(uploaded_file=NULL){
   path_found <- switch(ext,
                        zip = find_zip_path(uploaded_file=uploaded_file),
                        dta = uploaded_file$datapath,
-                       DTA = uploaded_file$datapath,
-                       validate("Invalid file; Please upload a .zip or .dta file")
-  )
-
+                       DTA = uploaded_file$datapath)
+                       #validate("Invalid file; Please upload a .zip or .dta file")
+  #)
+  # "Wrong .zip file, not containing Stata format data"
   #return(suppressWarnings(readstata13::read.dta13(path_found)))
 
   return(path_found)
@@ -75,3 +75,28 @@ showNoFileSelectedModal <- function() {
     footer = modalButton("OK")
   ))
 }
+
+
+
+
+
+###############################################################
+###  panels shows messages
+###############################################################
+
+success_wall <- function(successMessage="Survey raw data upload successful") {
+  wellPanel(
+    style = "margin-top: 5px;margin-bottom: 5px; padding: 1px; max-width: 400px; margin-left: auto; margin-right: auto;",
+    tags$h5(successMessage, style = "color: green; text-align: center;")
+  )
+}
+
+
+error_wall <- function(errorMessage="Wrong") {
+  wellPanel(
+    style = "margin-top: 20px; background-color: #f7f7f7; padding: 10px; max-width: 400px; margin-left: auto; margin-right: auto;",
+    tags$h5(errorMessage, style = "color: #333; text-align: center;")
+  )
+}
+
+
