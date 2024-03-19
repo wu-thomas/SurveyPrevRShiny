@@ -126,6 +126,17 @@ showNoFileSelectedModal <- function() {
 }
 
 
+###############################################################
+###  prompt to wait
+###############################################################
+
+showNoFileSelectedModal <- function() {
+  withLoadingScreen(
+    spinner = 3, # Choose the spinner style
+    color = "#FFFFFF" # Spinner color
+  )
+}
+
 
 
 
@@ -148,4 +159,87 @@ error_wall <- function(errorMessage="Wrong") {
   )
 }
 
+###############################################################
+###  prompt to whether overwrite existing data
+###############################################################
+
+overwrite_svy_dat_confirm <- modalDialog(
+  "Overwrite file already oploaded?",
+  title = "Overwriting files",
+  footer = tagList(
+    actionButton("cancel", "Cancel"),
+    actionButton("ok", "Delete", class = "btn btn-danger")
+  )
+)
+
+
+###############################################################
+###  read in GADM files
+###############################################################
+
+
+find_country_iso3 <- function(country){
+
+  return(DHS_country_list[DHS_country_list$CountryName==country,'ISO3_CountryCode'])
+}
+
+get_country_GADM <- function(country) {
+
+  country_iso3 <- DHS_country_list[DHS_country_list$CountryName==country,'ISO3_CountryCode']
+
+  gadm_list <- list()
+  levels <- 0
+  repeat {
+    tmp.gadm <- geodata::gadm(country = country_iso3, resolution=2,
+                                           level = levels,
+                                           path = tempdir())
+    if (is.null(tmp.gadm)) {
+      break
+    } else {
+      gadm_list[[paste0('adm',levels)]]  <- tmp.gadm
+      levels <- levels + 1
+    }
+  }
+
+  #names(gadm_list) <- paste0('adm',0:(levels - 1))
+  #return(0:(levels - 1))
+
+  return(gadm_list)
+}
+
+
+
+if(FALSE){
+check_levels("MDG")
+
+sf_object <- sf::st_as_sf(tmp.gadm)
+
+# Convert sf object to SpatialPolygonsDataFrame
+spatial_polygons_df <- sf::as_Spatial(sf_object)
+
+
+
+}
+
+if(FALSE){
+  div(id = "loadingSpinner",
+      style = "display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255, 255, 255, 0.8); padding: 20px; border-radius: 10px;",
+      tags$h3("Loading, please wait..."),
+      tags$div(class = "spinner-border text-primary", role = "status",
+               tags$div(shiny::icon("spinner", class = "fa-spin fa-3x"))
+      )
+  )
+
+}
+
+
+
+custom_spinner <- function(id, message = "Loading data, please Wait...") {
+  div(
+    id = id,
+    style = "display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255, 255, 255, 0.8); padding: 20px; border-radius: 10px; text-align: center;",
+    tags$h3(message),
+    shiny::icon("spinner", class = "fa-spin fa-3x", style = "color: #007bff;")  # Adjust color as needed
+  )
+}
 

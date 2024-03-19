@@ -7,10 +7,22 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+#'
+
+DHS_country_list <- rdhs::dhs_countries()
+
 mod_data_input_ui <- function(id){
   ns <- NS(id)
   tagList(
+
     tags$head(
+
+      ### load widgets
+      shinyFeedback::useShinyFeedback(),
+      shinyjs::useShinyjs(),
+
+
+      ### overall style
       tags$style(HTML("
        /* Increase font size of shinyFeedback messages */
        .shiny-feedback .feedback {
@@ -28,32 +40,59 @@ mod_data_input_ui <- function(id){
 
       "))
     ),
-    shinyFeedback::useShinyFeedback(),
-    tabPanel("Raw Data",
+
+
+    ### first subpanel, country and survey year
+
+    tabPanel("Country meta",
              h4("Data Input"),              #div(style = "margin-top: 10px;",
+
              ### country name
              selectInput(ns("country"), with_red_star("Choose a country "),
-                         c('',sort(rdhs::dhs_countries()[['CountryName']]))),
-
+                         c('',sort(DHS_country_list[['CountryName']]))),
 
              ### survey year
              selectInput(ns("Svy_year"),  with_red_star("Choose survey year "), choices = character(0)),
+             tags$hr() # (style="border-top: 2px solid #707070;")
+    ),
 
+    ### second subpanel, load DHS survey and GPS data
 
+    tabPanel("DHS input",
+             h4("Survey Data Input"),
              ### upload survey data
              fileInput(ns("Svy_dataFile"),
-                           with_red_star("Upload DHS survey data (Stata format, .zip or .DTA)")),
+                           with_red_star("Upload DHS survey data (Stata format, .zip or .DTA) ")),
 
+             div(style = "margin-top: -20px"),
              actionButton(ns("upload_Svy_Data"), "Submit Survey Data"),
+
              uiOutput(ns("Svy_Data_alert")),
 
 
 
              ### upload survey GPS
-             fileInput(ns("Svy_GPSFile"), with_red_star("Upload DHS GPS data (shapefile, .zip or .shp)")),
+             div(style = "margin-top: 15px"),
+             fileInput(ns("Svy_GPSFile"), with_red_star("Upload DHS GPS data (shapefile, .zip or .shp) ")),
+
+             div(style = "margin-top: -20px"),
              actionButton(ns("upload_Svy_GPS"), "Submit GPS Data"),
-             tableOutput(ns("Svy_GPS_alert"))
+
+             uiOutput(ns("Svy_GPS_alert")),
+             tags$hr() # (style="border-top: 2px solid #707070;")
+    ),
+
+
+    ### third subpanel, load GADM shapefile
+    tabPanel("GADM select",
+             h4("Spatial Boundary Input"),
+             ### select admin level
+             selectInput(ns("AdminLevel"), with_red_star("Select Admin Level "),
+                         choices=character(0))
     )
+
+
+
   )
 }
 
@@ -62,24 +101,56 @@ mod_data_input_ui <- function(id){
 #' @noRd
 mod_data_input_server <- function(id){
   moduleServer(id, function(input, output, session){
+
     ns <- session$ns
+
+    #selectedCountry <- reactive({ input$country })
 
     ###############################################################
     ### load survey and year
     ###############################################################
 
     ### Update selections for survey years once a country has been selected
-    svy_years_avail <- reactive({
-      if(is.null(input$country) || input$country == ""){
-        return(character(0)) # Return an empty character vector if no country is selected
-      }
-      get_survey_year(input$country)
-    })
 
     # Correctly observe the change in country selection
     observeEvent(input$country, {
+
+
+      ### show a spinner for waiting
+
+      if(input$country != ''){
+      session$sendCustomMessage(type = "controlSpinner", message = list(action = "show"))}
+
+
+      ### Update selections for survey years once a country has been selected
+
+      svy_years_avail <- reactive({
+        if(is.null(input$country) || input$country == ""){
+          return(character(0)) # Return an empty character vector if no country is selected
+        }
+        get_survey_year(input$country)
+      })
+
+
       freezeReactiveValue(input, "Svy_year")
       updateSelectInput(inputId = "Svy_year", choices = sort(svy_years_avail()))
+
+
+      country_GADM <- reactive({
+        if(is.null(input$country) || input$country == ""){
+          return(character(0)) # Return an empty character vector if no country is selected
+        }
+        get_country_GADM(input$country)
+      })
+
+      freezeReactiveValue(input, "AdminLevel")
+      if(!is.null(input$country) && input$country != ""){
+        updateSelectInput(inputId = "AdminLevel", choices = paste0('admin-',c(0:(length(country_GADM())-1))))
+      }
+      Sys.sleep(1)
+      session$sendCustomMessage(type = "controlSpinner", message = list(action = "hide"))
+
+
     })
 
     ###############################################################
@@ -135,8 +206,8 @@ mod_data_input_server <- function(id){
 
                      Sys.sleep(2) # Simulate delay
                      incProgress(1/3,detail = "Reading Stata file...")
-                     data <- suppressWarnings(readstata13::read.dta13(path_found))
-                     #data <- zmb.ex.dat
+                     #data <- suppressWarnings(readstata13::read.dta13(path_found))
+                     data <- zmb.ex.dat
 
                      Sys.sleep(2) # Simulate delay
                      incProgress(1/3, detail = "Finalizing...")
@@ -235,7 +306,9 @@ mod_data_input_server <- function(id){
     })
 
 
-
+    ###############################################################
+    ### load GADM shapefile
+    ###############################################################
 
   })
 }

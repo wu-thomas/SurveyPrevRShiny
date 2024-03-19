@@ -9,8 +9,9 @@
 options(shiny.maxRequestSize=150*1024^2) ## make the maximum size 150Mb for data input
 
 app_server <- function(input, output, session) {
-  # Your application server logic
 
+  shinyjs::useShinyjs()
   mod_data_input_server("Dat_Input")
+
 
 }

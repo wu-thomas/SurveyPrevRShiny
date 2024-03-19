@@ -6,10 +6,16 @@
 #' @noRd
 app_ui <- function(request) {
   tagList(
+    shinyjs::useShinyjs(),
+    # Global loading screen, defined outside of any module
+    # Define a global spinner with custom text
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
     fluidPage(
+
+      custom_spinner("loadingSpinnerCountry", "Loading country meta data, please wait..."),
+
       titlePanel("Small Area Estimation in LMIC"),
       sidebarLayout(
         sidebarPanel(
@@ -47,8 +53,11 @@ golem_add_external_resources <- function() {
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "SurveyPrevRshiny"
-    )
+    ),
+    tags$script(src = "handler.js"),
+    tags$link(href = "div_style.css")
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
   )
+
 }
