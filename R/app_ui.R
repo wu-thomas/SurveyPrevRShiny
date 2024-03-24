@@ -6,11 +6,21 @@
 #' @noRd
 app_ui <- function(request) {
   tagList(
+    tags$head(
+      tags$style(HTML("
+      .navbar .container-fluid {padding-left: 0; padding-right: 0;}
+      .navbar-header {margin-left: 0; margin-right: 0;}
+      .nav {margin: 0;}
+    "))
+    ),
+    shinyFeedback::useShinyFeedback(),
     shinyjs::useShinyjs(),
     # Global loading screen, defined outside of any module
     # Define a global spinner with custom text
+
     # Leave this function for adding external resources
     golem_add_external_resources(),
+
     # Your application UI logic
     fluidPage(
 
@@ -19,17 +29,25 @@ app_ui <- function(request) {
       titlePanel("Small Area Estimation in LMIC"),
       sidebarLayout(
         sidebarPanel(
-          mod_data_input_ui("Dat_Input")
+          mod_country_specify_ui("country_specify_1"),
+          mod_survey_dat_input_ui("survey_dat_input"),
+          mod_GADM_input_ui("GADM_input")
         ),
         mainPanel(
-          tabsetPanel(type = "tabs",
-                      mod_data_display_ui("Dat_Display"),
-                      mod_data_display_ui("Dat_Display2")
-                      # Invoke other UI modules here
+          navbarPage(title = "",
+                     # This is a single tab in the navbar
+                     mod_data_display_ui("Dat_Display_1"),
+                     mod_indicator_display_ui("indicator_display_1"),
+
+                     # Example of a dropdown menu in the navbar
+                     navbarMenu("More Options",
+                                tabPanel("Option 1", "Content for Option 1"),
+                                tabPanel("Option 2", "Content for Option 2")
+                                # You can add more options here
+                     )
           )
         )
       )
-
     )
   )
 }
@@ -54,8 +72,13 @@ golem_add_external_resources <- function() {
       path = app_sys("app/www"),
       app_title = "SurveyPrevRshiny"
     ),
+
+    ### add message handler
     tags$script(src = "handler.js"),
+
+    ### add style sheets for html objects
     tags$link(href = "div_style.css")
+
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
   )

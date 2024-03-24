@@ -22,22 +22,27 @@ attachment::att_amend_desc()
 #usethis::use_dev_package("richardli/surveyPrev")
 #usethis::use_dev_package("richardli/SUMMER")
 
+############################################################
+####  Add modules ----
+####  Create a module infrastructure in R/
+####  add module and functions for data input panel
+############################################################
 
-## Add modules ----
-## Create a module infrastructure in R/
+### Data Input
+golem::add_module(name = "country_specify", with_test = F)
+golem::add_module(name = "survey_dat_input", with_test = F)
+golem::add_module(name = "GADM_input", with_test = F)
+golem::add_fct("dat_input_helpers", with_test = F)
 
-## add module and functions for data input panel
-golem::add_module(name = "data_input", with_test = F,
-                  fct = "helpers",
-                  utils = "helpers")
 
+### Raw Data Display
 golem::add_module(name = "data_display", with_test = F) # Name of the module
-golem::add_module(name = "data_input_util", with_test = F) # Name of the module
+golem::add_module(name = "indicator_display", with_test = F) # Name of the module
 
 ## Add helper functions ----
 ## Creates fct_* and utils_*
-golem::add_fct("helpers", with_test = TRUE)
-golem::add_utils("helpers", with_test = TRUE)
+golem::add_fct("helpers", with_test = F)
+golem::add_utils("helpers", with_test = F)
 
 ## External resources
 ## Creates .js and .css files at inst/app/www
