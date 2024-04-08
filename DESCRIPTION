@@ -9,10 +9,24 @@ URL: https://github.com/wu-thomas/SurveyPrevRShiny
 BugReports: https://github.com/wu-thomas/SurveyPrevRShiny/issues
 Imports: 
     config (>= 0.3.2),
+    dplyr,
+    DT,
+    geodata,
     golem (>= 0.4.1),
+    haven,
+    INLA,
+    leaflet,
+    magrittr,
+    R6,
     rdhs,
+    sf,
     shiny (>= 1.7.4),
+    shinydashboard,
     shinyFeedback,
+    shinyjs,
+    shinyWidgets,
+    survey,
+    surveyPrev,
     tools
 Suggests: 
     testthat (>= 3.0.0)

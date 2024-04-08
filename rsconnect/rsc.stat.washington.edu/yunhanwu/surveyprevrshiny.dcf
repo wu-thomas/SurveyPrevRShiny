@@ -1,0 +1,12 @@
+name: surveyprevrshiny
+title: SurveyPrevRShiny
+username: yunhanwu
+account: yunhanwu
+server: rsc.stat.washington.edu
+hostUrl: https://rsc.stat.washington.edu/__api__
+appId: 57
+bundleId: 202
+url: https://rsc.stat.washington.edu/content/1a0a8efd-61eb-4fcd-9057-c3146b2e7bce/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
