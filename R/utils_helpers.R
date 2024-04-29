@@ -26,6 +26,28 @@ custom_spinner <- function(id, message = "Loading data, please Wait...") {
 }
 
 #rgba(255, 255, 255, 0.2)
+
+
+###############################################################
+###  question mark with pop up information
+###############################################################
+
+pop_question_icon <- function(id,
+                              title="Information",
+                              content,
+                              pop.position='right'){
+  # Popover for question mark icon
+  pop_question <- shinyBS::bsPopover(
+    id = id,
+    title = title,
+    content = content,
+    placement = pop.position,
+    trigger = "click"  # Popover appears on click
+  )
+  return(pop_question)
+
+}
+
 ###############################################################
 ###  Panels shows whether data step is success
 ###############################################################
@@ -93,6 +115,16 @@ showNoDataModal <- function() {
     footer = modalButton("OK")
   ))
 }
+
+
+showNoRecodeModal <- function(recode=NULL,Svy_indicator=NULL) {
+  showModal(modalDialog(
+    title = "Recode Data Missing",
+    paste0('Missing ',concatenate_vector_with_and(recode), ": The country and survey you selected do not support estimation for ",Svy_indicator),
+    easyClose = TRUE,
+    footer = modalButton("OK")
+  ))
+}
 ###############################################################
 ###  prompt to whether overwrite existing data
 ###############################################################
@@ -105,6 +137,8 @@ overwrite_svy_dat_confirm <- modalDialog(
     actionButton("ok", "Delete", class = "btn btn-danger")
   )
 )
+
+
 
 
 ###############################################################

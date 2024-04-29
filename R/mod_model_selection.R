@@ -7,6 +7,9 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+#'
+
+
 mod_model_selection_ui <- function(id){
   ns <- NS(id)
 
@@ -87,15 +90,15 @@ mod_model_selection_ui <- function(id){
 
       "))
     ),
-
-    h3("Model Fitting"),
+    div(class = "module-title",
+    h4("Model Fitting")),
     fluidRow(
-      column(8,
+      column(10,
              div(style = " margin: auto;float: left;",
                  uiOutput(ns("model_text_display"))
              )
       ),
-      column(4,
+      column(2,
              div(style = "display: flex; flex-wrap: wrap;",
                  uiOutput(ns("checklist"))
              )
@@ -106,24 +109,86 @@ mod_model_selection_ui <- function(id){
                         fluidRow(
                           column(12,
                                  div(DT::DTOutput(ns('checkboxTable')), class = "model-checkbox-table")
-                                 ),
+                          ),
                           column(12,
                                  div(style = "display: flex; justify-content: center; padding: 20px 0;width: 100%; max-width: 800px;",
                                      actionButton(ns("run_analysis"), "Run all selected models", class = "pretty-button"))
-                                 ),
-                                 #DT::DTOutput(ns('valuesTable')),
-                                 #DT::DTOutput(ns('Res_Tracker_Table')),
-                                 #div(DT::DTOutput(ns('Selected_Res_Tracker_Table')),class = "model-checkbox-table"),
+                          ),
+                          #DT::DTOutput(ns('valuesTable')),
+                          #DT::DTOutput(ns('Res_Tracker_Table')),
+                          #div(DT::DTOutput(ns('Selected_Res_Tracker_Table')),class = "model-checkbox-table"),
                           column(12,
-                          div(DT::DTOutput(ns('Res_Status')),class = "model-checkbox-table")
+                                 div(DT::DTOutput(ns('Res_Status')),class = "model-checkbox-table")
                           )
 
-                          )
-
-                        ),
-               tabPanel("Model Details"
                         )
+
+               ),
+               navbarMenu(
+                 title = "Model Details",
+
+                 # First sub-tab for "Direct Estimates"
+                 tabPanel(title = "Direct Estimates Method",
+                div(
+                            style = "font-size: 16px;max-width: 1200px;",
+
+                          withMathJax(),
+                          tags$div(HTML("<script type='text/x-mathjax-config'>
+                MathJax.Hub.Config({
+                'HTML-CSS': {
+                      fonts: ['TeX'],
+                      styles: {
+                        scale: 110,
+                        '.MathJax': { padding: '1em 0.1em', color: 'royalblue ! important' }
+                      }
+                    }
+                });
+                </script>
+                ")),
+                          withMathJax(includeMarkdown("inst/app/www/method_direct.rmd"))
+                 )),
+
+                 # Second sub-tab for "Area-level Model"
+                 tabPanel(title = "Area-level Model Method",
+                          div(
+                            style = "font-size: 16px;max-width: 1200px;",
+                            withMathJax(),
+                          tags$div(HTML("<script type='text/x-mathjax-config'>
+                MathJax.Hub.Config({
+                'HTML-CSS': {
+                      fonts: ['TeX'],
+                      styles: {
+                        scale: 110,
+                        '.MathJax': { padding: '1em 0.1em', color: 'royalblue ! important' }
+                      }
+                    }
+                });
+                </script>
+                ")),
+                          withMathJax(includeMarkdown("inst/app/www/method_FH.rmd"))
+                 )),
+
+                 # Third sub-tab for "Method 3"
+                 tabPanel(title = "Unit-level Model Method",
+                          div(
+                            style = "font-size: 16px;max-width: 1200px;",
+                            withMathJax(),
+                            tags$div(HTML("<script type='text/x-mathjax-config'>
+                MathJax.Hub.Config({
+                'HTML-CSS': {
+                      fonts: ['TeX'],
+                      styles: {
+                        scale: 110,
+                        '.MathJax': { padding: '1em 0.1em', color: 'royalblue ! important' }
+                      }
+                    }
+                });
+                </script>
+                ")),
+                            withMathJax(includeMarkdown("inst/app/www/method_unit.rmd"))
+                          ))
                )
+    )
 
 
     #div(DT::DTOutput(ns('checkboxTable')), class = "model-checkbox-table"),
@@ -174,18 +239,21 @@ mod_model_selection_server <- function(id,CountryInfo,AnalysisInfo){
 
       HTML(paste0(
         "<p style='font-size: large;'>",
-        "Your selection: <span style='font-weight:bold;'>", country, "</span>, survey in <span style='font-weight:bold;'>", svy_year, "</span>. ",
-        "<br> You aim to estimate <span style='font-weight:bold;'>", CountryInfo$svy_indicator_des(), "</span> ",
-        "across <span style='font-weight:bold;'>", concatenate_vector_with_and(CountryInfo$GADM_analysis_levels()), "</span> level(s).",
+        "Selected Country: <span style='font-weight:bold;'>", country, "</span>.",
+        " Survey Year: <span style='font-weight:bold;'>", svy_year, "</span>.",
+        "<br>",
+        "Indicator: <span style='font-weight:bold;'>", CountryInfo$svy_indicator_des(), "</span> at ",
+        "<span style='font-weight:bold;'>", concatenate_vector_with_and(CountryInfo$GADM_analysis_levels()), "</span> level(s).",
         "</p>",
-        "<p style='background-color: lightblue; padding: 10px;font-size: large;'>",
-        "We suggest the following analytical approaches for each level:",
+        "<div style='background-color: #D0E4F7; padding: 10px; font-size: large;'>",
+        "Recommended Modelling Approaches: (Methodology under 'Model Details')",
         "<ul style='font-size: large;'>",
-        "<li><strong>National level:</strong> Use <span style='font-weight:bold; background-color: lightblue;'>survey weighted direct estimates</span>.</li>",
-        "<li><strong>Admin-1 level:</strong> Use <span style='font-weight:bold; background-color: lightblue;'>smoothed direct estimates</span>.</li>",
-        "<li><strong>Finer levels:</strong> Implement <span style='font-weight:bold; background-color: lightblue;'>unit-level models</span>.</li>",
+        "<li><strong>National Level:</strong> Use <span style='font-weight:bold;'>survey-weighted direct estimates</span>.</li>",
+        "<li><strong>Admin-1 Level:</strong> Apply <span style='font-weight:bold;'>smoothed direct estimates</span>.</li>",
+        "<li><strong>Finer Levels:</strong> Implement <span style='font-weight:bold;'>unit-level models</span>.</li>",
         "</ul>",
-        "</p>",
+        "</div>",
+
         "<hr style='border-top-color: #E0E0E0;'>"
       ))
 
@@ -294,6 +362,14 @@ mod_model_selection_server <- function(id,CountryInfo,AnalysisInfo){
     observeEvent(input$run_analysis, {
 
 
+
+      if(CountryInfo$use_preloaded_Madagascar()){
+
+        AnalysisInfo$model_res_tracker_list(mdg.ex.res.tracker)
+
+      }
+
+
       ### pop-up window if no model is selected
       selected_matrix <- AnalysisInfo$model_selection_mat()
 
@@ -336,9 +412,12 @@ mod_model_selection_server <- function(id,CountryInfo,AnalysisInfo){
 
 
             tmp.tracker.list <- res_tracker_list[[tmp.method]][[tmp.adm]]
+
+
+            ### skip model if already tried
             if(!is.null(tmp.tracker.list$status)){
 
-              message('Skip. Already tried modelling at ',tmp.adm,' using ',tmp.method.display,' approach.')
+              #message('Skip. Already tried modelling at ',tmp.adm,' using ',tmp.method.display,' approach.')
               session$sendCustomMessage('controlSpinner', list(action = "show",
                 message = paste0('Skip. Already tried modelling at ',tmp.adm,' using ',tmp.method.display,' approach.')))
               Sys.sleep(1)
@@ -379,6 +458,12 @@ mod_model_selection_server <- function(id,CountryInfo,AnalysisInfo){
                 return(NULL)
               }
             )
+
+            if(!is.null(tmp.res$warning)){
+              tmp.tracker.list$status <- 'Warning'
+              tmp.tracker.list$message <- tmp.res$warning
+
+            }
 
 
 
@@ -535,6 +620,12 @@ mod_model_selection_server <- function(id,CountryInfo,AnalysisInfo){
               selected_res_tracker[i, j] <- as.character(htmltools::HTML(paste('<span style="color:red;">&#10008;', 'Unsuccessful: ',tmp.message, '</span>')))
               next
             }
+
+            if(tmp.status=='Warning'){
+              selected_res_tracker[i, j] <- as.character(htmltools::HTML(paste('<span style="color:orange;">&#9888;', 'Warning: ',tmp.message, '</span>')))
+              next
+            }
+
 
 
           }

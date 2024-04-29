@@ -20,7 +20,7 @@
 #'
 #' @param method %in% c('Direct','FH','Unit')
 #'
-#' @return The return value, if any, from executing the function.
+#' @return fitted surveyPrev
 #'
 #' @noRd
 
@@ -63,17 +63,17 @@ fit_svy_model <- function(cluster.geo,
 
 
   ### determine whether the gadm level is finer than stratification level
-  if(model.gadm.level > strat.gadm.level){psedo_level=2}else{psedo_level=1}
+  if(model.gadm.level > strat.gadm.level){pseudo_level=2}else{pseudo_level=1}
 
 
-  if(psedo_level==2 && aggregation==T){
+  if(pseudo_level==2 && aggregation==T){
     message('Currectly not supporting aggregation for fine spatial resolution.')
     aggregation = F
   }
 
   ### for levels not finer than stratification level
 
-  if(psedo_level==1){
+  if(pseudo_level==1){
 
     ### define cluster level
     cluster.info <- surveyPrev::clusterInfo(geo=cluster.geo,
@@ -88,16 +88,16 @@ fit_svy_model <- function(cluster.geo,
       ### find aggregation weights using survey
       agg.survey <- surveyPrev::aggSurveyWeight(data = analysis.dat,
                                                 cluster.info = cluster.info,
-                                                admin = psedo_level)
+                                                admin = pseudo_level)
 
       ### define admin information
       admin.info <- surveyPrev::adminInfo(poly.adm = gadm.list[[paste0('Admin-',model.gadm.level)]],
-                                          admin = psedo_level,
+                                          admin = pseudo_level,
                                           by.adm= paste0("NAME_",model.gadm.level),
                                           agg.pop =agg.survey)
 
     }else{  admin.info <- surveyPrev::adminInfo(poly.adm = gadm.list[[paste0('Admin-',model.gadm.level)]],
-                                                admin = psedo_level,
+                                                admin = pseudo_level,
                                                 by.adm= paste0("NAME_",model.gadm.level))}
 
 
@@ -105,7 +105,7 @@ fit_svy_model <- function(cluster.geo,
 
   ### for levels finer than stratification level
 
-  if(psedo_level==2){
+  if(pseudo_level==2){
 
     aggregation = F
 
@@ -125,7 +125,7 @@ fit_svy_model <- function(cluster.geo,
     #)
 
     admin.info <- surveyPrev::adminInfo(poly.adm = gadm.list[[paste0('Admin-',model.gadm.level)]],
-                                        admin = psedo_level,
+                                        admin = pseudo_level,
                                         by.adm= paste0("NAME_",model.gadm.level),
                                         by.adm.upper = paste0("NAME_",model.gadm.level-1))
 
@@ -139,10 +139,25 @@ fit_svy_model <- function(cluster.geo,
   ### direct estimates, possibly with aggregation to natl and strata level (D:admin-1)
   if(method=='Direct'){res_adm <- surveyPrev::directEST(data = analysis.dat,
                                                         cluster.info = cluster.info,
-                                                        admin = psedo_level,
+                                                        admin = pseudo_level,
                                                         weight = "population",
                                                         admin.info = admin.info,
                                                         aggregation = aggregation)
+
+
+  if(pseudo_level==2){
+
+    ### identify bad cluster
+    bad_admins <- subset(res_adm$res.admin2, direct.var < 1e-30|is.na(direct.var)|direct.var==Inf)$admin2.name.full
+
+    if(length(bad_admins)>0){
+
+      missing.percent <- round((length(bad_admins)/dim(res_adm$res.admin2)[1])*100,digits=1)
+        message(paste0(missing.percent,'% of regions do not have valid direct estimates.'))
+        res_adm$warning <- paste0(missing.percent,'% of regions do not have valid estimates.')
+
+    }
+  }
 
   }
 
@@ -153,22 +168,22 @@ fit_svy_model <- function(cluster.geo,
 
     res_direct <- surveyPrev::directEST(data = analysis.dat,
                                         cluster.info = cluster.info,
-                                        admin = psedo_level,
+                                        admin = pseudo_level,
                                         weight = "population",
                                         admin.info = admin.info,
                                         aggregation = F)
 
-    if(psedo_level==1){
+    if(pseudo_level==1){
       res_adm <- surveyPrev::fhModel(data= analysis.dat,
                                      cluster.info = cluster.info,
                                      admin.info = admin.info,
-                                     admin = psedo_level,
+                                     admin = pseudo_level,
                                      model = "bym2",
                                      aggregation =aggregation)
 
     }
 
-    if(psedo_level==2){
+    if(pseudo_level==2){
 
       ### identify bad cluster
       bad_admins <- subset(res_direct$res.admin2, direct.var < 1e-30|is.na(direct.var)|direct.var==Inf)$admin2.name.full
@@ -178,9 +193,9 @@ fit_svy_model <- function(cluster.geo,
 
       if(length(bad_admins)>0){
         if((length(bad_admins)/
-           dim(res_direct$res.admin2)[1])>0.6){
+           dim(res_direct$res.admin2)[1])>0.25){
           message((length(bad_admins)/dim((res_direct$res.admin2)[1])))
-          stop("More than 60% of regions do not have valid direct estimates.")
+          stop("More than 25% of regions do not have valid direct estimates.") #25%
         }
 
         bad_clusters <- subset(cluster.info$data, admin2.name.full %in% bad_admins)$cluster
@@ -205,7 +220,7 @@ fit_svy_model <- function(cluster.geo,
       res_adm <- surveyPrev::fhModel(data = updated.analysis.dat,
                                      cluster.info = cluster.info,
                                      admin.info = admin.info,
-                                     admin = psedo_level,
+                                     admin = pseudo_level,
                                      model = "bym2",
                                      aggregation =aggregation)
     }
@@ -216,16 +231,25 @@ fit_svy_model <- function(cluster.geo,
   ### unit-level model estimates, possibly with aggregation to natl
 
   if(method=='Unit'){
-    if(dim(admin.info$mat)[1]>2000){
-      stop(paste0("Too many admin regions (",dim(admin.info$mat)[1],") to yield meaningful results."))
+
+    ### proportion of regions no data, (25% as cutoff)
+    region_no_dat <- 1-length(unique(cluster.info$data$admin2.name.full))/dim(admin.info$mat)[1]
+    #if(analysis.dat$)
+
+    if(region_no_dat> 0.25){
+      stop("More than 25% of regions"," have no data. Model not fitted due to data sparsity.")
+      message(paste0(round(region_no_dat*100,digits=0), "% of regions"," have no data. Model not fitted due to data sparsity."))
+
+      #stop(paste0("Too many admin regions (",dim(admin.info$mat)[1],") to yield meaningful results."))
     }
+
 
     res_adm <- surveyPrev::clusterModel(data=analysis.dat,
                                         cluster.info= cluster.info,
                                         admin.info = admin.info,
                                         model = "bym2",
                                         stratification =FALSE,
-                                        admin = psedo_level,
+                                        admin = pseudo_level,
                                         aggregation = aggregation,
                                         CI = 0.95)
   }
@@ -252,7 +276,49 @@ AnalysisInfo <- AnalysisInfo$new()
 
 ### initialize Zambia example
 
-# country meta info
+# Kenya meta info
+
+if(FALSE){
+
+  ### country meta
+  ex.country <- 'Kenya'
+  ex.svy.year <- '2022'
+
+  ### survey indicator meta
+  ex.indicator.abbrev <-'FP_CUSA_W_MOD'
+  recode_names_list <-'Individual Recode'
+  recode_for_ind_abbrev()
+  #file_path <-'C:/Users/wu-th/Downloads/KE_2022_DHS_04132024_852_143411.zip'
+
+  CountryInfo$country(ex.country)
+  CountryInfo$svyYear_list(ex.svy.year)
+
+  country_GADM <- get_country_GADM(ex.country)
+  CountryInfo$GADM_list(country_GADM)
+
+  for (i in 1:length(recode_names_list)){
+    file_prefix <- find_DHS_dat_name(ex.country,ex.svy.year,recode =recode_names_list[i])
+
+    recode_path_found <- find_recode_path(file_path = file_path,
+                                          recode_file =file_prefix,
+                                          extensions = 'DTA')
+
+    recode.data <- suppressWarnings(haven::read_dta(recode_path_found))
+
+    recode.data <- as.data.frame(recode.data)
+
+    CountryInfo$update_svy_dat(recode_abbrev=recode_for_ind_abbrev()[i], new_dat=recode.data)
+
+
+  }
+
+
+
+
+}
+
+
+# Zambia meta info
 if(FALSE){
 CountryInfo$country('Zambia')
 CountryInfo$svyYear_list('2018')
@@ -274,7 +340,7 @@ svy_dat_recode <- svy_dat_list[['IR']]
 
 ### initialize Madagascar example
 
-# country meta info
+# Madagascar meta info
 if(FALSE){
   CountryInfo$country('Madagascar')
   CountryInfo$svyYear_list('2021')
@@ -418,221 +484,7 @@ examine.res <- AnalysisInfo$model_res_list()
 
 
 
-###############################################################
-### xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-###############################################################
 
-
-
-if(FALSE){
-
-  row_names <- c("Direct", "FH", "Unit")
-  nrows <- length(row_names)
-
-  # col_names <- names(mdg.ex.GADM.list)
-  col_names <- names(zmb.ex.GADM.list)
-
-  ncols <- length(col_names)
-
-  adm_res_mat <- matrix(vector('list', nrows * ncols), nrow = nrows, dimnames = list(row_names, col_names))
-
-  for (tmp.adm in col_names){
-
-    tmp.adm.num <- admin_to_num(tmp.adm)
-
-    for(tmp.method in c('Direct','FH','Unit')){
-
-      message('Modelling at Admin-',tmp.adm,' using ',tmp.method,' model.')
-
-
-      ### Run model
-      tmp.res <- tryCatch(
-        {
-          tmp.res <- fit_svy_model(cluster.geo= zmb.ex.GPS,  #mdg.ex.GPS
-                        gadm.list = zmb.ex.GADM.list,  #mdg.ex.GADM.list
-                        analysis.dat =  surveyPrev::getDHSindicator(Rdata=zmb.ex.IR.dat,indicator = 'RH_ANCN_W_N4P'), #surveyPrev::getDHSindicator(Rdata=mdg.ex.KR.dat,indicator = 'CH_VACC_C_NON'),
-                        model.gadm.level = tmp.adm.num,
-                        strat.gadm.level = 1,
-                        method = tmp.method,
-                        aggregation =T
-
-          )
-        },error = function(e) {
-          message(e$message)
-          return(NULL)
-        }
-      )
-
-
-      ### store model results
-      adm_res_mat[[tmp.method, tmp.adm]] <- tmp.res
-
-
-
-    }
-
-  }
-
-}
-### use Madagascar to implement multiple admin
-if(FALSE){
-  tmp.geo <- zmb.ex.GPS
-  tmp.gadm.list <- zmb.ex.GADM.list
-  tmp.analysis.dat <- surveyPrev::getDHSindicator(Rdata=zmb.ex.IR.dat,indicator = 'RH_ANCN_W_N4P')
-
-  #tmp.geo <- mdg.ex.GPS
-  #tmp.gadm.list <- mdg.ex.GADM.list
-  #tmp.analysis.dat <- surveyPrev::getDHSindicator(Rdata=mdg.ex.KR.dat,indicator = 'CH_VACC_C_NON')
-
-#names(tmp.gadm.list) <- c('National','Customized-1','Admin-1','Admin-2','Customized-2')
-#sf::sf_use_s2(F)
-### setup admin info for admin-1 and admin-2
-
-
-strata.level <- 1
-
-
-### analysis at admin-2 level in GADM (admin1 in DHS)
-
-adm.level <- 4
-
-if( adm.level > strata.level){
-cluster.info.tmp <- surveyPrev::clusterInfo(geo=tmp.geo, poly.adm1=tmp.gadm.list[[paste0('Admin-',strata.level)]],
-                                             by.adm1 = paste0("NAME_",strata.level),by.adm2 = paste0("NAME_",adm.level),
-                                             poly.adm2=tmp.gadm.list[[paste0('Admin-',adm.level)]])
-}else{
-  cluster.info.tmp <- surveyPrev::clusterInfo(geo=tmp.geo, poly.adm1=tmp.gadm.list[[paste0('Admin-',adm.level)]],
-                                              by.adm1 = paste0("NAME_",adm.level),by.adm2 = paste0("NAME_",adm.level),
-                                              poly.adm2=tmp.gadm.list[[paste0('Admin-',adm.level)]])
-}
-
-if(adm.level> strata.level){
-admin.info.tmp <- surveyPrev::adminInfo(poly.adm = tmp.gadm.list[[paste0('Admin-',adm.level)]], admin = 2,
-                                        by.adm= paste0("NAME_",adm.level),
-                                        by.adm.upper = paste0("NAME_",strata.level))
-}else{admin.info.tmp <- surveyPrev::adminInfo(poly.adm = tmp.gadm.list[[paste0('Admin-',adm.level)]], admin = 1,
-                                              by.adm= paste0("NAME_",adm.level))}
-
-
-if(strata.level< adm.level){psedo_level=2}else{psedo_level=1}
-
-res_direct_adm <- surveyPrev::directEST(data = tmp.analysis.dat,
-                     cluster.info = cluster.info.tmp,
-                     admin = psedo_level)
-
-res_fh_adm <- surveyPrev::fhModel(data=tmp.analysis.dat,
-                             cluster.info = cluster.info.tmp,
-                             admin.info = admin.info.tmp,
-                             admin = psedo_level,
-                             model = "bym2",aggregation =FALSE)
-
-res_cl_adm <- surveyPrev::clusterModel(data=tmp.analysis.dat,
-                           cluster.info= cluster.info.tmp,
-                           admin.info = admin.info.tmp,
-                           model = "bym2",
-                           stratification =FALSE,
-                           admin = psedo_level,
-                           aggregation =FALSE,
-                           CI = 0.95)
-
-
-
-res_direct_adm[[paste0('res.admin1')]]
-res_cl_adm$res.admin1
-res_fh_adm$res.admin1
-
-
-agg.survey.tmp <- surveyPrev::aggSurveyWeight(data = tmp.analysis.dat,
-                                              cluster.info = cluster.info.tmp,
-                                              admin = psedo_level)
-
-
-
-
-if(strata.level< adm.level){
-  admin.info.tmp <- surveyPrev::adminInfo(poly.adm = tmp.gadm.list[[paste0('Admin-',adm.level)]], admin = 2,
-                                          by.adm= paste0("NAME_",adm.level),
-                                          by.adm.upper = paste0("NAME_",strata.level),
-                                          agg.survey.tmp)
-
-}else{admin.info.tmp <- surveyPrev::adminInfo(poly.adm = tmp.gadm.list[[paste0('Admin-',adm.level)]],
-                                              admin = 1,
-                                              by.adm= paste0("NAME_",adm.level),
-                                              agg.pop =agg.survey.tmp)}
-
-
-
-res_aggre_adm <- surveyPrev::directEST(data = tmp.analysis.dat,
-                        cluster.info = cluster.info.tmp,
-                        admin = psedo_level,
-                        weight = "population",
-                        admin.info = admin.info.tmp,
-                        aggregation = TRUE)
-
-}
-
-
-#tmp.analysis.dat <- surveyPrev::getDHSindicator(Rdata=zmb.ex.IR.dat,indicator = 'RH_ANCN_W_N4P')
-
-#tmp.geo <- zmb.ex.GPS
-#tmp.gadm.list <- zmb.ex.GADM.list
-#tmp.geo <- mdg.ex.GPS
-#tmp.gadm.list <- mdg.ex.GADM.list
-#points_sf <- sf::st_as_sf(tmp.geo)
-#sf::sf_use_s2(FALSE)
-#tmp.cluster.info <- surveyPrev::clusterInfo(geo=tmp.geo, poly.adm1=tmp.gadm.list[['Admin-1']],
-#                                            poly.adm2=tmp.gadm.list[['Admin-2']])
-
-if(FALSE){
-
-poly.adm1<- sf::st_as_sf(tmp.gadm.list[['Admin-1']])
-poly.adm2<-sf::st_as_sf(tmp.gadm.list[['Admin-4']])
-points_sf <- sf::st_as_sf(tmp.geo)
-
-# Select required columns and filter out wrong points
-cluster.info <- points_sf %>%
-  dplyr::select(cluster = DHSCLUST, LONGNUM, LATNUM) #%>%
-#filter(!(LATNUM < 0.0000001 & LONGNUM < 0.0000001))
-#removing wrong.points that has weird LONGNUM LATNUM
-wrong.points <- which(points_sf$LATNUM < 0.0000001 & points_sf$LONGNUM < 0.0000001)
-
-by.adm1 ='NAME_1'
-by.adm2 ='NAME_4'
-
-admin1.sf <- sf::st_join(cluster.info, poly.adm1) %>%
-  sf::st_transform(sf::st_crs(poly.adm1)) # Transform CRS if needed
-
-cluster.info$admin1.name <- as.data.frame( admin1.sf)[,by.adm1]
-
-# Spatial join for admin2
-admin2.sf <- sf::st_join(cluster.info, poly.adm2) %>%
-  sf::st_transform(sf::st_crs(poly.adm2)) # Transform CRS if needed
-
-# Add admin2 name to cluster.info
-cluster.info$admin2.name <- as.data.frame( admin2.sf)[,by.adm2]
-cluster.info$admin2.name.full <- paste0(cluster.info$admin1.name,"_",cluster.info$admin2.name)
-
-
-
-
-tmp.cluster.info <- surveyPrev::clusterInfo(geo=tmp.geo, poly.adm1=tmp.gadm.list[['Admin-3']],
-                                            poly.adm2=tmp.gadm.list[['Admin-4']],
-                                            by.adm2 = 'NAME_4',by.adm1 = 'NAME_3')
-}
-
-#invalid_geoms <- sf::st_is_valid(tmp.geo, reason = TRUE)
-
-if(FALSE){
-tmp.gadm.list <- zmb.ex.GADM.list
-tmp.geo <- zmb.ex.GPS
-
-tmp.analysis.dat <- surveyPrev::getDHSindicator(Rdata=zmb.ex.IR.dat,indicator = 'RH_ANCN_W_N4P')
-colnames(tmp.analysis.dat)
-tmp.cluster.info <- surveyPrev::clusterInfo(geo=tmp.geo, poly.adm1=tmp.gadm.list[['Admin-1']], poly.adm2=tmp.gadm.list[['Admin-2']])
-
-
-tmp.analysis.dat <- surveyPrev::getDHSindicator(Rdata=zmb.ex.IR.dat,indicator = 'FP_NADA_W_UNT')
-}
 
 
 ###############################################################

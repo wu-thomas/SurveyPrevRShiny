@@ -33,11 +33,14 @@ attachment::att_amend_desc()
 golem::add_module(name = "country_specify", with_test = F)
 golem::add_module(name = "survey_dat_input", with_test = F)
 golem::add_module(name = "model_selection", with_test = F)
-golem::add_module(name = "result_visual", with_test = F)
+golem::add_module(name = "res_visual_prev_map", with_test = F)
+golem::add_module(name = "res_visual_scatter", with_test = F)
 golem::add_module(name = "result_tabulate", with_test = F)
 
 golem::add_fct("dat_input_helpers", with_test = F)
 golem::add_fct("analysis_helpers", with_test = F)
+golem::add_fct("visualization_helpers", with_test = F)
+golem::add_fct("results_visual_helpers", with_test = F)
 
 
 ### Raw Data Display

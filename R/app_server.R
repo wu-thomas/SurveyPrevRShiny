@@ -22,7 +22,9 @@ app_server <- function(input, output, session) {
   mod_survey_dat_input_server("survey_dat_input_1",CountryInfo = CountryInfo)
   mod_model_selection_server("model_selection_1",CountryInfo = CountryInfo,AnalysisInfo=AnalysisInfo)
   mod_result_tabulate_server("result_tabulate_1",CountryInfo = CountryInfo,AnalysisInfo=AnalysisInfo)
-  mod_result_visual_server("result_visual_1",CountryInfo = CountryInfo,AnalysisInfo=AnalysisInfo)
+  mod_res_visual_prev_map_server("res_visual_prev_map_1",CountryInfo = CountryInfo,AnalysisInfo=AnalysisInfo)
+
+  mod_res_visual_scatter_server("res_visual_scatter_1",CountryInfo = CountryInfo,AnalysisInfo=AnalysisInfo)
 
   #mod_survey_dat_input_server("survey_dat_input_1",CountryInfo = CountryInfo)
   #mod_GADM_input_server("GADM_input", CountryInfo = CountryInfo)

@@ -22,7 +22,11 @@ CountryInfo <- R6::R6Class(
     svyYear_selected = NULL,
 
 
+    display_interactive = NULL,
+
     GADM_list = NULL,
+    GADM_list_smoothed = NULL,
+
     GADM_display_selected = NULL,
     GADM_display_selected_level=NULL,
     GADM_analysis_levels=NULL,
@@ -46,7 +50,12 @@ CountryInfo <- R6::R6Class(
       self$svyYear_list <- reactiveVal(NULL)
       self$svyYear_selected <- reactiveVal(NULL)
 
+      self$display_interactive <- reactiveVal(NULL)
+
+
       self$GADM_list <- reactiveVal(NULL)
+      self$GADM_list_smoothed <- reactiveVal(NULL)
+
       self$GADM_display_selected <- reactiveVal(NULL)
       self$GADM_display_selected_level <- reactiveVal(NULL)
       self$GADM_analysis_levels <- reactiveVal(NULL)

@@ -12,7 +12,7 @@
 get_survey_year <- function(country=NULL){
 
   if(is.null(country)){return(NULL)}
-  surveys <- rdhs::dhs_surveys()
+  surveys <- DHS.survey.meta
 
   # To see the structure of the returned surveys data frame
   country_svy <- surveys[surveys$CountryName == country, ]
@@ -39,15 +39,26 @@ find_DHS_dat_name <- function(country,svy_year,
                               recode){
 
   tryCatch({
-    DHS_country_code <- DHS_country_list[DHS_country_list$CountryName == country,]$DHS_CountryCode
+    DHS_country_code <- DHS.country.meta[DHS.country.meta$CountryName == country,]$DHS_CountryCode
 
     if(!recode== 'Geographic Data'){
-    survey_list <- rdhs::dhs_datasets(countryIds =DHS_country_code, surveyYear = svy_year)%>%
-      dplyr::filter( FileFormat=='Stata dataset (.dta)')%>%
-      dplyr::filter(FileType == recode)}else{
+      survey_list <- DHS.dataset.meta %>% dplyr::filter(
+                       FileFormat=='Stata dataset (.dta)' &
+                       DHS_CountryCode == DHS_country_code &
+                       SurveyYear == svy_year&
+                       FileType == recode)
 
-      survey_list <- rdhs::dhs_datasets(countryIds =DHS_country_code, surveyYear = svy_year)%>%
-      dplyr::filter( FileType== recode)
+
+    #survey_list <- rdhs::dhs_datasets(countryIds =DHS_country_code, surveyYear = svy_year)%>%
+    #  dplyr::filter( FileFormat=='Stata dataset (.dta)')%>%
+    #  dplyr::filter(FileType == recode)
+    }else{
+      survey_list <- DHS.dataset.meta %>% dplyr::filter(
+          DHS_CountryCode == DHS_country_code &
+          SurveyYear == svy_year&
+          FileType == recode)
+      #survey_list <- rdhs::dhs_datasets(countryIds =DHS_country_code, surveyYear = svy_year)%>%
+      #dplyr::filter( FileType== recode)
 
       }
     return(survey_list$FileName)
@@ -114,97 +125,6 @@ find_recode_path <- function(recode_file=NULL,
 #find_DHS_dat_name('Zambia',2018,recode='Individual Recode')
 
 
-###############################################################
-###  Given a zip file, unzip and find the correct extension
-###############################################################
-
-# retired
-if(FALSE){
-
-  find_zip_path_extension <- function(uploaded_file = NULL, extensions = c(".DTA", ".dta")) {
-  if (is.null(uploaded_file)) {
-    return(NULL)
-  }
-
-  file_path <- uploaded_file$datapath
-  temp <- tempfile()
-  unzip(file_path, exdir = temp)
-
-  # Use lapply to iterate over extensions and find files for each extension
-  files_list <- lapply(extensions, function(ext) {
-    # Create regex pattern for the current extension
-    pattern <- paste0(gsub("\\.", "\\\\.", ext), "$") # Escape dot for regex
-    list.files(temp, recursive = TRUE, pattern = pattern, full.names = TRUE)
-  })
-
-  # Flatten the list and remove empty elements
-  files <- unlist(files_list)
-  files <- files[files != ""]
-
-  if (length(files) < 1) {
-    return(NULL)
-  }
-
-  return(files[1])
-}
-
-
-}
-
-
-###############################################################
-###  determine the file path for loading DHS survey data
-###############################################################
-
-# retired
-if(FALSE){
-find_svy_dat_path <- function(uploaded_file=NULL){
-
-  ext <- tools::file_ext(uploaded_file$name)
-  path_found <- switch(ext,
-                       zip = find_zip_path_extension(uploaded_file=uploaded_file),
-                       dta = uploaded_file$datapath,
-                       DTA = uploaded_file$datapath)
-  #validate("Invalid file; Please upload a .zip or .dta file")
-  #)
-  # "Wrong .zip file, not containing Stata format data"
-  #return(suppressWarnings(haven::read_dta(path_found)))
-
-  return(path_found)
-
-}
-
-}
-#### Check the data can be loaded with labels
-# file_path <- paste0('E:/Dropbox/YunhanJon/Fertility-Analysis/Scripts/Madagascar/contraceptive_usage/','ZM_2018_DHS_03132024_2146_143411.zip')
-# extensions <- '.DTA'
-# file_to_download <- files[1]
-# tmp.zmb.dat <- haven::read_dta(file_to_download)
-# tmp.zmb.dat <- foreign::read.dta(file_to_download)
-
-###############################################################
-###  determine the file path for loading DHS GPS data
-###############################################################
-
-# retired
-if(FALSE){
-find_svy_GPS_path <- function(uploaded_file=NULL){
-
-  ext <- tools::file_ext(uploaded_file$name)
-  path_found <- switch(ext,
-                       zip = find_zip_path_extension(uploaded_file=uploaded_file,
-                                                     extensions = c(".shp")),
-                       shp = uploaded_file$datapath)
-
-  return(path_found)
-
-}
-
-}
-
-
-
-
 
 
 
@@ -214,15 +134,14 @@ find_svy_GPS_path <- function(uploaded_file=NULL){
 ###  load GADM files
 ###############################################################
 
+get_country_GADM <- function(country,resolution=1) {
 
-get_country_GADM <- function(country) {
-
-  country_iso3 <- DHS_country_list[DHS_country_list$CountryName==country,'ISO3_CountryCode']
+  country_iso3 <- DHS.country.meta[DHS.country.meta$CountryName==country,'ISO3_CountryCode']
 
   gadm_list <- list()
   levels <- 0
   repeat {
-    tmp.gadm <- geodata::gadm(country = country_iso3, resolution=1,
+    tmp.gadm <- geodata::gadm(country = country_iso3, resolution=resolution,
                               level = levels,
                               path = tempdir())
     if (is.null(tmp.gadm)) {
@@ -269,6 +188,8 @@ check_gadm_levels <- function(gadm_list) {
     Num_Regions = sapply(gadm_list, function(x) nrow(x))
   )
 
+  #df$Num_Regions <- as.numeric(as.character(df$Num_Regions))
+
   df$Admin_Level <- ifelse(df$Admin_Level == "Admin-0", "National", df$Admin_Level)
   row.names(df) <- NULL
   colnames(df) <- c("Admin Level", "Number of Regions")
@@ -276,7 +197,8 @@ check_gadm_levels <- function(gadm_list) {
   transposed_df <- as.data.frame(t(df))
 
   colnames(transposed_df) <- transposed_df[1, ]
-  transposed_df <- transposed_df[-1, ]
+  transposed_df <-  transposed_df[-1, , drop = FALSE]
+  transposed_df[] <- lapply(transposed_df, function(x) as.integer(as.character(x)))
 
   return(transposed_df)
 }
@@ -286,10 +208,92 @@ check_gadm_levels <- function(gadm_list) {
 
 
 ###############################################################
-###  load indicator data
+###  check whether survey support indicator calculation
+###############################################################
+
+#tmp.check <- check_dat_avail(country = 'Zambia' , svy_year = 2018 , indicator = 'HA_HIVP_B_HIV')
+#tmp.check <- check_dat_avail(country = 'Kenya' , svy_year = 2022 , indicator = 'HA_HIVP_B_HIV')
+#tmp.check <- check_dat_avail(country = 'Zambia' , svy_year = 1992 , indicator = 'WS_SRCE_P_BAS')
+
+check_dat_avail <- function(country,svy_year,indicator){
+
+  ### initialize all recode names
+
+  recode_list_abbrev <- c('IR','PR','KR','BR','HR','MR','AR','CR')
+
+  recode_list_names <- c("Individual Recode","Household Member Recode","Children's Recode",
+                         "Births Recode","Household Recode","Men's Recode",
+                         "HIV Test Results Recode","Couples' Recode")
+
+  return.obj <- list()
+
+  ### find country code
+  DHS_country_code <- DHS.country.meta[DHS.country.meta$CountryName == country,]$DHS_CountryCode
+
+  ### determine needed  recode names
+  needed_recode <- recode_list_names[which(full_ind_des[full_ind_des$ID==indicator,
+                                                        recode_list_abbrev]==T)]
+  needed_recode_abbrev <- recode_list_abbrev[which(full_ind_des[full_ind_des$ID==indicator,
+                                                                recode_list_abbrev]==T)]
+
+  return.obj[['needed_recode']] <- needed_recode
+  return.obj[['needed_recode_abbrev']] <- needed_recode_abbrev
+
+  ### check whether any is missing
+  survey_list <- DHS.dataset.meta%>%
+    dplyr::filter( FileFormat=='Stata dataset (.dta)' &
+                     DHS_CountryCode == DHS_country_code &
+                     SurveyYear == svy_year)
+
+  available_recode <-survey_list$FileType
+
+  return.obj[['missing_recode']] <- needed_recode[!needed_recode %in% available_recode]
+
+
+  return(return.obj)
+
+}
+
+
+###############################################################
+###  recode abbreviation to full name
 ###############################################################
 
 
+# Create a function to map abbreviations to names
+get_recode_names <- function(abbreviations) {
+  recode_list_abbrev <- c('IR', 'PR', 'KR', 'BR', 'HR', 'MR', 'AR', 'CR')
+  recode_list_names <- c("Individual Recode", "Household Member Recode", "Children's Recode",
+                         "Births Recode", "Household Recode", "Men's Recode",
+                         "HIV Test Results Recode", "Couples' Recode")
+  # Create a named vector
+  name_lookup <- setNames(recode_list_names, recode_list_abbrev)
+
+  # Return the names corresponding to the input abbreviations
+  return(name_lookup[abbreviations])
+}
+
+
+###############################################################
+###  function to measure API response time
+###############################################################
+
+if(FALSE){
+# Example function to measure API response time
+measure_response_time <- function() {
+  start_time <- Sys.time()
+  # Example API call using rdhs
+  all.country <- rdhs::dhs_countries()
+  all.survey <- rdhs::dhs_surveys()
+
+
+  end_time <- Sys.time()
+  response_time <- end_time - start_time
+  return(as.numeric(response_time, units = "secs"))
+}
+
+response_time <- measure_response_time()
+}
 
 ###############################################################
 ###  create example data frame for recode
@@ -328,6 +332,7 @@ wide_format$AR <- wide_format$ID %in% AR_HIV
 wide_format$CR <- wide_format$ID %in% CR_couple
 
 # merge back with the information data frame
+#surveyPrev_ind_list <-  surveyPrev::surveyPrevIndicators
 full_ind_des <- merge(surveyPrev_ind_list,wide_format,by='ID',all.x=T)
 
 save(full_ind_des,file='indicator_list.rda')

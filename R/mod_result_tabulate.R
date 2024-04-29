@@ -10,7 +10,8 @@
 mod_result_tabulate_ui <- function(id){
   ns <- NS(id)
   fluidPage(
-    titlePanel("Results Tabulation"), # Add a title
+    div(class = "module-title",
+    h4("Results Tabulation")), # Add a title
     fluidRow(
       column(4,
              selectInput(ns("selected_method"), "Select Method",
@@ -23,11 +24,23 @@ mod_result_tabulate_ui <- function(id){
     ),
     fluidRow(
       column(12,
-             tags$h4("Estimates from models"),
+             div(style = " margin: auto;float: left;margin-top: 10px",
+                 uiOutput(ns("text_display"))
+             )
+      )
+    ),
+    fluidRow(
+      column(12,
+             #tags$h4("Estimates from models"),
              hr(style="border-top-color: #E0E0E0;"), # (style="border-top: 2px solid #707070;"),
-             div(style = " margin: auto;float: left;width:100%;max-width:800px",
+             div(style = " margin: auto;float: left;width:100%;max-width:1000px",
                  DT::dataTableOutput(ns("Res_tab"))
              )
+      ),
+      column(12,
+      div( style = "width:100%;max-width:1000px; margin-top: 20px; display: flex; justify-content: center;",
+           uiOutput(ns("download_button_ui"))
+      )
       )
     )
     # Place additional UI elements below
@@ -42,6 +55,7 @@ mod_result_tabulate_server <- function(id,CountryInfo,AnalysisInfo){
     ns <- session$ns
 
 
+    ### update parameters
     row_names <- c("Direct", "FH", "Unit")
     nrows <- length(row_names)
 
@@ -52,6 +66,65 @@ mod_result_tabulate_server <- function(id,CountryInfo,AnalysisInfo){
       updateSelectInput(inputId = "selected_adm",
                         choices = col_names())
     })
+
+
+    output$text_display <- renderUI({
+
+      ### return empty map if no subnational level selected
+      if (length(input$selected_adm) == 0 || input$selected_adm == "") {
+        return(NULL)
+      }
+
+      ### extract selections
+      selected_adm <- input$selected_adm
+      selected_method <- input$selected_method
+
+      ### initialize parameters
+      model_res_all <- AnalysisInfo$model_res_list()
+      model_res_selected <- model_res_all[[selected_method]][[selected_adm]]
+
+      method_match <- c(
+        "Direct" = "Direct estimates",
+        "Unit" = "Unit-level",
+        "FH" = "Area-level"
+      )
+
+      method_des <- method_match[selected_method]
+
+      if(is.null(model_res_selected)){
+
+        model_res_tab(NULL)
+
+        HTML(paste0(
+          "<p style='font-size: large;'>",
+          "Results for ",
+          "<span style='background-color: #D0E4F7;'><b>", method_des, "</b></span> ",
+          "model at ",
+          "<span style='background-color: #D0E4F7;'><b>", selected_adm, "</b></span>",
+          " level are not available. Please make the model has been successfully fitted.",
+          "</p>"
+        ))
+
+      }else{
+
+        HTML(paste0(
+          "<p style='font-size: large;'>",
+          "Tabulating estimates for ",
+          "<span style='background-color: #D0E4F7;'><b>", method_des, "</b></span> ",
+          "model at ",
+          "<span style='background-color: #D0E4F7;'><b>", selected_adm, "</b></span> level.",
+          "</p>"
+        ))
+
+      }
+
+
+    })
+
+
+
+    ### tabulate
+    model_res_tab <- reactiveVal(NULL)
 
 
     output$Res_tab <- DT::renderDataTable({
@@ -83,18 +156,54 @@ mod_result_tabulate_server <- function(id,CountryInfo,AnalysisInfo){
       if(is.null(model_res_selected)){return()
       }else{
 
-        dt <- DT::datatable(model_res_selected,
+        res.to.tabulate <- harmonize_all_cols(survey.res=model_res_selected)
+        #res.to.tabulate <- format_tab_num(survey.res=res.to.tabulate)
+        res.to.tabulate <- subset(res.to.tabulate, select=-c(var))
+
+
+        names(res.to.tabulate)[names(res.to.tabulate) == "mean"] <- "Mean"
+        names(res.to.tabulate)[names(res.to.tabulate) == "sd"] <- "Standard_Error"
+        names(res.to.tabulate)[names(res.to.tabulate) == "lower"] <- "Lower_CI"
+        names(res.to.tabulate)[names(res.to.tabulate) == "upper"] <- "Upper_CI"
+        names(res.to.tabulate)[names(res.to.tabulate) == "cv"] <- "Coefficient_of_Variation"
+        names(res.to.tabulate)[names(res.to.tabulate) == "CI.width"] <- "Width_95_CI"
+
+
+
+        if("median" %in% names(res.to.tabulate)){
+        names(res.to.tabulate)[names(res.to.tabulate) == "median"] <- "Median"
+        }
+        if("region.name" %in% names(res.to.tabulate)){
+          names(res.to.tabulate)[names(res.to.tabulate) == "region.name"] <- "Region_Name"
+        }
+        if("upper.adm.name" %in% names(res.to.tabulate)){
+          names(res.to.tabulate)[names(res.to.tabulate) == "upper.adm.name"] <- "Upper_Admin_Name"
+        }
+        if("region.name.full" %in% names(res.to.tabulate)){
+          names(res.to.tabulate)[names(res.to.tabulate) == "region.name.full"] <- "Region_Name_Full"
+        }
+
+        model_res_tab(res.to.tabulate)
+
+        dt <- DT::datatable(res.to.tabulate,
                             options = list(pageLength = 5,scrollX = TRUE,
-                                           scroller = TRUE),
+                                           scroller = TRUE,autoWidth = TRUE),
                             filter = 'top', rownames = FALSE)
 
-        numeric_columns <- sapply(model_res_selected, is.numeric)
+        numeric_columns <- sapply(res.to.tabulate, is.numeric)
 
+        # store results before rounding
+
+        # format numerical
         dt <- DT::formatRound(dt, columns = numeric_columns, digits = 3)
+
+        # format cv as %
+        dt$Coefficient_of_Variation <- dt$Coefficient_of_Variation * 100
+        dt <- DT::formatPercentage(dt,columns='Coefficient_of_Variation', digits=1)
 
         # Apply formatting styles
         dt <- DT::formatStyle(dt,
-                              columns = names(model_res_selected),
+                              columns = names(res.to.tabulate),
                               backgroundColor = 'rgba(255, 255, 255, 0.8)',
                               border = '1px solid #ddd',
                               fontSize = '14px',
@@ -109,6 +218,40 @@ mod_result_tabulate_server <- function(id,CountryInfo,AnalysisInfo){
 
 
     })
+
+
+    ### download button
+
+    output$download_button_ui <- renderUI({
+
+      prepared.res <- model_res_tab()
+
+      if (!is.null(prepared.res)) {  # HTML download
+        downloadButton(ns("download_csv"), "Download as csv", icon = icon("download"),
+                       class = "btn-primary")
+      } else {
+        NULL
+      }
+    })
+
+    output$download_csv <- downloadHandler(
+      filename = function() {
+        file.prefix <- paste0(CountryInfo$country(),'_',
+                              input$selected_adm,'_',
+                              input$selected_method)
+        file.prefix <- gsub("[-.]", "_", file.prefix)
+
+        return(paste0(file.prefix,'.csv'))
+      },
+      content = function(file) {
+        prepared.res <- as.data.frame(model_res_tab())
+        readr::write_csv(prepared.res, file)
+      }
+    )
+
+
+
+
 
   })
 }
