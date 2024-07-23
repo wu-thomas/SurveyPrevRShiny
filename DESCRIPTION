@@ -1,38 +1,63 @@
 Package: SurveyPrevRshiny
-Title: PKG_TITLE
-Version: 0.0.0.9000
+Title: SurveyPrevRshiny
+Version: 0.0.1.0000
 Authors@R: 
     person("Yunhan", "Wu", , "yunhanwu@uw.edu", role = c("cre", "aut"))
-Description: PKG_DESC.
+Description: The Shiny app for performing small area estimation and prevalence mapping of maternal health indicators in the region of Africa. The app is an user friendly implemtation of R package surveyPrev.
 License: MIT + file LICENSE
 URL: https://github.com/wu-thomas/SurveyPrevRShiny
 BugReports: https://github.com/wu-thomas/SurveyPrevRShiny/issues
+Depends: 
+    R (>= 2.10)
 Imports: 
-    config (>= 0.3.2),
+    bookdown,
+    config,
     dplyr,
     DT,
     geodata,
+    ggplot2,
+    ggridges,
+    ggspatial,
+    ggthemes,
     golem (>= 0.4.1),
+    HatchedPolygons,
     haven,
+    htmltools,
+    htmlwidgets,
+    httr,
     INLA,
+    leaflegend,
     leaflet,
+    leafsync,
     magrittr,
+    mapview,
+    markdown,
+    patchwork,
+    plotly,
+    prettymapr,
+    R.utils,
     R6,
+    RColorBrewer,
     rdhs,
+    readr,
+    scales,
     sf,
     shiny (>= 1.7.4),
+    shinyBS,
     shinydashboard,
     shinyFeedback,
     shinyjs,
     shinyWidgets,
+    sn,
+    SUMMER,
     survey,
-    surveyPrev,
-    tools
-Suggests: 
-    testthat (>= 3.0.0)
+    tidyr,
+    viridisLite
+Remotes:
+    statnmap/HatchedPolygons,
+    rspatial/geodata,
+    richardli/SurveyPrev
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
-Depends: 
-    R (>= 2.10)
+RoxygenNote: 7.3.1

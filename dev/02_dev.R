@@ -16,13 +16,18 @@
 ## Dependencies ----
 ## Amend DESCRIPTION with dependencies read from package code parsing
 ## install.packages('attachment') # if needed.
-attachment::att_amend_desc()
+attachment::att_amend_desc(must.exist = F,update.config = TRUE)
 # usethis::use_package("pkgload")
 
 #usethis::use_dev_package("richardli/surveyPrev")
 #usethis::use_dev_package("richardli/SUMMER")
 # options(repos = c(getOption("repos"), INLA = "https://inla.r-inla-download.org/R/testing"))
 # renv::install("INLA")
+
+### not able to download from github using renv::
+# https://forum.posit.co/t/cant-install-packages-with-renv/96696/17
+### potential fix: 1. options(renv.download.override = utils::download.file)
+# 2. Sys.setenv(RENV_DOWNLOAD_FILE_METHOD = "libcurl")
 ############################################################
 ####  Add modules ----
 ####  Create a module infrastructure in R/
@@ -33,9 +38,12 @@ attachment::att_amend_desc()
 golem::add_module(name = "country_specify", with_test = F)
 golem::add_module(name = "survey_dat_input", with_test = F)
 golem::add_module(name = "model_selection", with_test = F)
-golem::add_module(name = "res_visual_prev_map", with_test = F)
-golem::add_module(name = "res_visual_scatter", with_test = F)
 golem::add_module(name = "result_tabulate", with_test = F)
+golem::add_module(name = "res_visual_prev_map", with_test = F)
+golem::add_module(name = "res_visual_multiple_maps", with_test = F)
+golem::add_module(name = "res_visual_scatter", with_test = F)
+golem::add_module(name = "res_visual_ridge", with_test = F)
+
 
 golem::add_fct("dat_input_helpers", with_test = F)
 golem::add_fct("analysis_helpers", with_test = F)

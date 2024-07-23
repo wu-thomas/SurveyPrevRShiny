@@ -5,7 +5,7 @@ account: yunhanwu
 server: rsc.stat.washington.edu
 hostUrl: https://rsc.stat.washington.edu/__api__
 appId: 57
-bundleId: 239
+bundleId: 276
 url: https://rsc.stat.washington.edu/surveyPrevRShiny/
 version: 1
 asMultiple: FALSE

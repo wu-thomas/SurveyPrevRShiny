@@ -11,7 +11,11 @@ mod_res_visual_prev_map_ui <- function(id) {
   ns <- NS(id)
 
   fluidPage(
+    shinyWidgets::chooseSliderSkin("Flat", color = "#b0c4de"),
     tags$head(
+      tags$style(type = 'text/css', "#big_slider .irs-grid-text, #big_slider .irs-min,
+      #big_slider .irs-max,#big_slider .irs-single {font-size: 14px;}"),
+
       # Custom CSS for styling
       tags$style(HTML("
       .button-container {
@@ -35,13 +39,21 @@ mod_res_visual_prev_map_ui <- function(id) {
       ),
       column(4,
              selectInput(ns("selected_adm"), "Select Admin Level", choices = character(0))
-      ),
+      )
+    ),
+
+    fluidRow(
       column(4,
              selectInput(ns("selected_measure"), "Select Statistics",
                          choices = c("Mean"="mean",
                                      "Coefficient of Variation"= "cv",
-                                     "Width of 95% Credible Interval"="CI.width"))
-      )
+                                     "Width of 95% Credible Interval"="CI.width",
+                                     "Exceedance Probability"="exceed_prob"))
+      ),
+      div(id = 'big_slider',
+      column(4,
+             uiOutput(ns("choose_prob"))
+      ))
     ),
 
     fluidRow(
@@ -101,6 +113,32 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
     })
 
 
+    ### select the probability for exceedance probability map
+    output$choose_prob <- renderUI({
+      req(input$selected_measure)
+
+      if (input$selected_measure=='exceed_prob') {
+
+        ### set initial threshold to national average
+        tmp.natl.res <- AnalysisInfo$Natl_res()
+        if(!is.null(tmp.natl.res)){
+          initial.val <- round(tmp.natl.res$direct.est,digits=2)
+        }else{
+          initial.val=0.5
+        }
+
+        return(      sliderInput(ns("selected_threshold"),
+                                 "Select Threshold",
+                                 min = 0,
+                                 max = 1,
+                                 value = initial.val,  # Default initial value
+                                 step = 0.01)
+        )
+        } else {  # if FALSE, show nothing
+        return(NULL)
+      }
+    })
+
 
     ###############################################################
     ### determine interactive vs static map based on user selection
@@ -131,16 +169,32 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
 
     output$download_button_ui <- renderUI({
       if (input$PrevmapType) {  # HTML download
-        downloadButton(ns("download_interactive"), "Download as HTML", icon = icon("download"),
-                                  class = "btn-primary")
+        if(is.null(prev.map.interactive.output())){return(NULL)}else{
+          uiOutput(ns("download_interactive_p1_text_display"))
+        }
+
         } else {
           downloadButton(ns("download_static"), "Download as PDF", icon = icon("download"),
                          class = "btn-primary")
         }
     })
 
+
+    ### update text for download button
+    output$download_interactive_p1_text_display <- renderUI({
+      text_display <- HTML(paste0(
+        "<p style='font-size: large;'>",
+        "Interactive multiple maps cannot be downloaded. Please check out non-interactive maps.",
+        "</p>"
+      ))
+
+      return(text_display)
+
+    })
+
+
     ###############################################################
-    ### prepare maps
+    ### Text display
     ###############################################################
 
     output$text_display <- renderUI({
@@ -155,9 +209,26 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
       selected_method <- input$selected_method
       selected_measure <- input$selected_measure
 
+
+      ### no exceedance probability map for direct estimates
+      if(FALSE){
+        if(selected_measure=='exceed_prob' &selected_method=='Direct'){
+
+          text_display <- HTML(paste0(
+            "<p style='font-size: large;'>",
+            "Exceedance probabilty map cannot be produced for Direct Estimates Model.",
+            "</p>"
+          ))
+
+          return(text_display)
+        }
+      }
+
+
       ### initialize parameters
       model_res_all <- AnalysisInfo$model_res_list()
       model_res_selected <- model_res_all[[selected_method]][[selected_adm]]
+
 
       method_match <- c(
         "Direct" = "Direct estimates",
@@ -175,7 +246,9 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
           "<span style='background-color: #D0E4F7;'><b>", method_des, "</b></span> ",
           "model at ",
           "<span style='background-color: #D0E4F7;'><b>", selected_adm, "</b></span>",
-          " level are not available. Please make the model has been successfully fitted.",
+          " level are ",
+          "<strong style='color: red;'>NOT</strong>",
+          " available. Please make sure the model has been successfully fitted.",
           "</p>"
         ))
 
@@ -195,6 +268,10 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
 
     })
 
+    ###############################################################
+    ### prepare maps
+    ###############################################################
+
     ### interactive map
 
     prev.map.interactive.output <- reactiveVal(NULL)
@@ -202,8 +279,11 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
     output$prev_map_interactive <- leaflet::renderLeaflet({
 
       ### initialize base map
-      prev.interactive.plot <- leaflet::leaflet() %>%
-        leaflet::addTiles()
+      prev.interactive.plot <- leaflet::leaflet()
+
+      if(CountryInfo$use_basemap()=='OSM'){
+        prev.interactive.plot<- prev.interactive.plot %>% leaflet::addTiles()
+      }
 
       ### return empty map if no subnational level selected
       if (length(input$selected_adm) == 0 || input$selected_adm == "") {
@@ -227,34 +307,43 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
       model_res_selected <- model_res_all[[selected_method]][[selected_adm]]
 
 
-      # determine hatching density by country size
-      tryCatch(
-        {
+      ### do not plot if no results produced for the selection
+      if(is.null(model_res_selected)|selected_adm=='National'){
+        return(prev.interactive.plot)
+      }
+
+      ### determine hatching density by country size
+      hatching.density.country <- tryCatch({
           country.area <- as.numeric(sf::st_area(CountryInfo$GADM_list_smoothed()[["National"]])/1e6)
           hatching.density.country <- round(sqrt(9e07/country.area))
+          hatching.density.country
 
         },error = function(e) {
 
-          hatching.density.country <- 12
+          return(12)
+          #hatching.density.country <- 12
 
         })
 
-      if(is.null(model_res_selected)|selected_adm=='National'){
+      if(selected_measure=='exceed_prob'){selected_threshold <- input$selected_threshold}else{selected_threshold=NULL}
 
-        return(prev.interactive.plot)
-
-      }else{
-
-        prev.interactive.plot <- suppressWarnings(prevMap.leaflet(res.obj = model_res_selected,
+      prev.interactive.plot <-  tryCatch({
+        suppressWarnings(prevMap.leaflet(res.obj = model_res_selected,
                                     gadm.shp = CountryInfo$GADM_list_smoothed()[[selected_adm]],
                                     model.gadm.level = admin_to_num(selected_adm),
                                     strata.gadm.level = CountryInfo$GADM_strata_level(),
                                     value.to.plot =selected_measure,
                                     legend.label = 'Estimates',
                                     hatching.density = hatching.density.country,
-                                    map.title=NULL))
+                                    map.title=NULL,
+                                    threshold.p = selected_threshold,
+                                    use.basemap = CountryInfo$use_basemap(),
+                                    legend.color.reverse=CountryInfo$legend_color_reverse()))
+      },error = function(e) {
+        message(e$message)
+        return(NULL)
+      })
 
-      }
       prev.map.interactive.output(prev.interactive.plot)
       #message(paste0(input$prev_map$lng,'_',input$map_center$lat,'_', input$map_zoom))
       return(prev.interactive.plot)
@@ -300,18 +389,27 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
 
         return(NULL)
 
-      }else{
+      }
+
+      if(selected_measure=='exceed_prob'){selected_threshold <- input$selected_threshold}else{selected_threshold=NULL}
+
+      prev.static.plot <-  tryCatch({
 
         prev.static.plot <- suppressWarnings(prevMap.static(res.obj = model_res_selected,
-                                                      gadm.shp = CountryInfo$GADM_list_smoothed()[[selected_adm]],
-                                                      model.gadm.level = admin_to_num(selected_adm),
-                                                      strata.gadm.level = CountryInfo$GADM_strata_level(),
-                                                      value.to.plot =selected_measure,
-                                                      legend.label = 'Estimates',
-                                                      direction=-1,
-                                                      map.title=NULL))
+                                                            gadm.shp = CountryInfo$GADM_list_smoothed()[[selected_adm]],
+                                                            model.gadm.level = admin_to_num(selected_adm),
+                                                            strata.gadm.level = CountryInfo$GADM_strata_level(),
+                                                            value.to.plot =selected_measure,
+                                                            threshold.p = selected_threshold,
+                                                            legend.label = 'Estimates',
+                                                            color.reverse = T,
+                                                            map.title=NULL))
 
-      }
+      },error = function(e) {
+        message(e$message)
+        return(NULL)
+      })
+
       prev.map.static.output(prev.static.plot)
       #message(paste0(input$prev_map$lng,'_',input$map_center$lat,'_', input$map_zoom))
       return(prev.static.plot)
@@ -324,6 +422,7 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
     ### download maps
     ###############################################################
 
+    if(FALSE){
     output$download_interactive <- downloadHandler(
 
       filename = function() {
@@ -346,6 +445,7 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
         #webshot2::webshot(url='mymap.html', file = file)
       }
     )
+    }
 
     output$download_static <- downloadHandler(
       filename = function() {

@@ -1,4 +1,51 @@
 ###############################################################
+### function to add basemap
+###############################################################
+#' @description produce interactive map for country boundaries
+#'
+#' @param original.map the object to add basemap on
+#'
+#' @param static.ind indicator of static (ggplot2) or interactive map (leaflet)
+#'
+#' @param basemap.type what basemap to use 'OSM' or 'WHO'
+#'
+#' @return leaflet/ggplot2 object
+#'
+#' @noRd
+#'
+
+add_basemap <- function(original.map,
+                        static.ind= F,
+                        basemap.type =NULL){
+
+
+  if(is.null(basemap.type)){
+    return(original.map)
+  }
+
+  if(basemap.type=='OSM'&static.ind==F){
+
+    return.map <- tryCatch({
+      original.map %>%  leaflet::addTiles()
+    },error = function(e) {
+      message(e$message)
+      message('basemap did not load successfully')
+      return.map <<- original.map
+    })
+
+  }else{
+
+    return.map <- original.map
+
+  }
+
+  return(return.map)
+
+}
+
+
+
+###############################################################
 ### interactive map for country boundaries
 ###############################################################
 
@@ -13,7 +60,7 @@
 #' @noRd
 #'
 
-country.boundary.leaflet <-function(gadm.level,gadmData){
+country.boundary.leaflet <-function(gadm.level,gadmData,use.basemap='OSM'){
 
   gadmData <- sf::st_as_sf(gadmData)
 
@@ -42,8 +89,14 @@ country.boundary.leaflet <-function(gadm.level,gadmData){
     }
 
 
-  country.map <- gadmData  %>% leaflet::leaflet(options = leaflet::leafletOptions(zoomSnap = 0.1)) %>%
-    leaflet::addTiles() %>%
+  country.map <- gadmData  %>% leaflet::leaflet(options = leaflet::leafletOptions(zoomSnap = 0.1))
+
+  country.map <- add_basemap(original.map=country.map,
+                              static.ind= F,
+                              basemap.type =use.basemap)
+  #if(use.basemap=='OSM'){ country.map <- country.map %>%  leaflet::addTiles()}
+
+  country.map <- country.map %>%
     leaflet::addPolygons(
       weight = 1,
       #color = "gray",
@@ -70,7 +123,7 @@ country.boundary.leaflet <-function(gadm.level,gadmData){
 }
 
 
-#' @example
+# example
 
 if(FALSE){
   country_gadm <- readRDS('data/GADM_shp/BEN/BEN_GADM_display.rds')
@@ -89,7 +142,7 @@ if(FALSE){
 if(FALSE){
 
 map_plot <- ggplot2::ggplot() +
-  ggspatial::annotation_map_tile(type = "osm") +
+  ggspatial::annotation_map_tile(type = "osm",zoom=0) +
   ggplot2::geom_sf(data = country_gadm[[gadm.level]], color = "#00008B", size = 2) +
   ggplot2::theme_minimal()
 
@@ -140,7 +193,8 @@ if (httr::status_code(response) == 200) {
 
 ncluster.map.static <-function(gadm.level,
                                gadm.list,
-                               cluster.geo){
+                               cluster.geo,
+                               cluster.info=NULL){
 
   gadm.level.num=admin_to_num(gadm.level)
 
@@ -150,11 +204,13 @@ ncluster.map.static <-function(gadm.level,
     adm.sf <- gadm.list[[paste0('Admin-',1)]]
     adm.sf$admin1.name <- adm.sf[[paste0("NAME_",1)]]
 
+    if(is.null(cluster.info)){
     cluster.info <- surveyPrev::clusterInfo(geo=cluster.geo,
                                             poly.adm1=gadm.list[[paste0('Admin-',1)]],
                                             poly.adm2=gadm.list[[paste0('Admin-',1)]],
                                             by.adm1 = paste0("NAME_",1),
                                             by.adm2 = paste0("NAME_",1))
+    }
 
     adm.sf <- adm.sf %>%
       dplyr::left_join(cluster.info$data %>% dplyr::group_by(admin1.name) %>%
@@ -176,11 +232,14 @@ ncluster.map.static <-function(gadm.level,
       dplyr::mutate(admin2.name.full = paste0(upper.adm.name, "_", region.name))
 
 
+    if(is.null(cluster.info)){
     cluster.info <- surveyPrev::clusterInfo(geo=cluster.geo,
                                             poly.adm1=gadm.list[[paste0('Admin-',gadm.level.num-1)]],
                                             poly.adm2=gadm.list[[paste0('Admin-',gadm.level.num)]],
                                             by.adm1 = paste0("NAME_",gadm.level.num-1),
                                             by.adm2 = paste0("NAME_",gadm.level.num))
+    }
+
     check.dat <-cluster.info$data
 
 
@@ -256,7 +315,10 @@ tmp.res.obj <- ncluster.map.static(gadm.level='Admin-1',
 
 ncluster.map.interactive <-function(gadm.level,
                                gadm.list,
-                               cluster.geo){
+                               cluster.geo,
+                               cluster.info=NULL,
+                               use.basemap='OSM',
+                               legend.color.reverse= F){
 
   gadm.level.num=admin_to_num(gadm.level)
 
@@ -266,11 +328,13 @@ ncluster.map.interactive <-function(gadm.level,
     adm.sf <- gadm.list[[paste0('Admin-',1)]]
     adm.sf$admin1.name <- adm.sf[[paste0("NAME_",1)]]
 
+    if(is.null(cluster.info)){
     cluster.info <- surveyPrev::clusterInfo(geo=cluster.geo,
                                             poly.adm1=gadm.list[[paste0('Admin-',1)]],
                                             poly.adm2=gadm.list[[paste0('Admin-',1)]],
                                             by.adm1 = paste0("NAME_",1),
                                             by.adm2 = paste0("NAME_",1))
+    }
 
     adm.sf <- adm.sf %>%
       dplyr::left_join(cluster.info$data %>% dplyr::group_by(admin1.name) %>%
@@ -304,12 +368,14 @@ ncluster.map.interactive <-function(gadm.level,
     adm.sf <- adm.sf %>%
       dplyr::mutate(admin2.name.full = paste0(upper.adm.name, "_", region.name))
 
-
+    if(is.null(cluster.info)){
     cluster.info <- surveyPrev::clusterInfo(geo=cluster.geo,
                                             poly.adm1=gadm.list[[paste0('Admin-',gadm.level.num-1)]],
                                             poly.adm2=gadm.list[[paste0('Admin-',gadm.level.num)]],
                                             by.adm1 = paste0("NAME_",gadm.level.num-1),
                                             by.adm2 = paste0("NAME_",gadm.level.num))
+    }
+
     check.dat <-cluster.info$data
 
 
@@ -345,13 +411,27 @@ ncluster.map.interactive <-function(gadm.level,
                                domain = adm.sf$n.clusters,
                                na.color = '#AEAEAE')
 
+
+  pal.legend <- leaflet::colorNumeric(palette = palette_colors,
+                               domain = adm.sf$n.clusters,
+                               na.color = '#AEAEAE',
+                               reverse = legend.color.reverse)
+
   #hover_labels <- NA
 
   num_bins <- min(max(adm.sf$n.clusters,na.rm=T)-min(adm.sf$n.clusters,na.rm=T),7)
 
 
-  cluster.map.interactive <- adm.sf  %>% leaflet::leaflet(options = leaflet::leafletOptions(zoomSnap = 0.1)) %>%
-    leaflet::addTiles() %>%
+  cluster.map.interactive <- adm.sf  %>% leaflet::leaflet(options = leaflet::leafletOptions(zoomSnap = 0.1))
+
+  cluster.map.interactive <- add_basemap(original.map=cluster.map.interactive,
+                             static.ind= F,
+                             basemap.type =use.basemap)
+
+  #if(use.basemap=='OSM'){ cluster.map.interactive <- cluster.map.interactive %>%  leaflet::addTiles()}
+
+
+  cluster.map.interactive <- cluster.map.interactive %>%
     leaflet::addPolygons(
       fillColor = ~pal(n.clusters),
       weight = 1,
@@ -377,7 +457,7 @@ ncluster.map.interactive <-function(gadm.level,
   legend.label = paste0('Number of<br>', 'Clusters')
   ### add legend
   cluster.map.interactive <- cluster.map.interactive %>%
-    leaflegend::addLegendNumeric(pal = pal, values = ~n.clusters, title =  htmltools::HTML(legend.label),
+    leaflegend::addLegendNumeric(pal = pal.legend, values = ~n.clusters, title =  htmltools::HTML(legend.label),
                                  orientation = 'vertical', fillOpacity = .7,
                                  position = 'bottomright', group = 'Symbols',
                                  width=25,height=150,naLabel ='No Data',
@@ -420,106 +500,3 @@ if(FALSE){
 
 
 
-
-
-###############################################################
-### experiments
-###############################################################
-if(FALSE){
-
-
-  ###############################################################
-  ### interactive map for country boundaries
-  ###############################################################
-  country_gadm <- readRDS('data/GADM_shp/MDG/MDG_GADM_display.rds')
-
-
-  gadm.level <- 'Admin-2' # CountryInfo$GADM_display_selected_level()
-  gadm.level.num <- admin_to_num(gadm.level)
-  gadmData <- country_gadm[['Admin-2']]
-  #gadmData <- CountryInfo$GADM_display_selected()
-
-  country.boundary.leaflet <-function(gadm.level,gadmData){
-
-    gadm.level.num <- admin_to_num(gadm.level)
-
-  if(gadm.level=='National'){
-  hover_labels='Yes'}else{
-
-    gadmData$region.name = gadmData[[paste0('NAME_',gadm.level.num)]]
-    if(gadm.level.num>1){
-    gadmData$upper.adm.name = gadmData[[paste0('NAME_',gadm.level.num-1)]]
-    }
-
-  hover_labels <- gadmData %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(hover_label = {
-      label <- paste0('Region: ', region.name, '<br/>')
-      if(gadm.level.num>1){
-        label <- paste0(label,  'Upper Admin: ', upper.adm.name, '<br/>')
-      }
-      htmltools::HTML(label)  # Ensure that HTML rendering is applied
-    }) %>%
-    dplyr::ungroup() %>%
-    dplyr::pull(hover_label)
-
-  }
-
-
-  country.map <- gadmData  %>% leaflet::leaflet(options = leaflet::leafletOptions(zoomSnap = 0.1)) %>%
-    leaflet::addTiles() %>%
-    leaflet::addPolygons(
-      weight = 1,
-      #color = "gray",
-      #fillOpacity = 1,
-      opacity = 1,
-      label = ~ hover_labels, # display hover label
-      labelOptions = leaflet::labelOptions(
-        style = list("color" ="black"),  # Text color
-        direction = "auto",
-        textsize = "15px",
-        noHide = F,  # Label disappears when not hovering
-        offset = c(0,0)  # Adjust label position if necessary
-      ),
-      highlightOptions = leaflet::highlightOptions(
-        weight = 2,
-        color = "#666",
-        fillOpacity = 0.75,
-        bringToFront = TRUE,
-        sendToBack=T)
-    )
-
-  return(country.map)
-
-  }
-
-###############################################################
-### static map for boundaris
-###############################################################
-
-tmp.boundary <- mdg.ex.GADM.list[['National']]
-
-bbox <- sf::st_bbox(tmp.boundary)
-lon_range <- c(bbox["xmin"], bbox["xmax"])
-lat_range <- c(bbox["ymin"], bbox["ymax"])
-
-base_map <- get_stamenmap(bbox = c(left = lon_range[1], bottom = lat_range[1], right = lon_range[2], top = lat_range[2]),
-                          zoom = auto, maptype = "terrain-background")
-
-
-###############################################################
-### scatter plot for pointwise comparison
-###############################################################
-
-
-
-res.obj <-mdg.ex.model.res$FH$`Admin-2`
-gadm.shp <- mdg.ex.GADM.list[["Admin-2"]]
-model.gadm.level <- 2
-strata.gadm.level <- 2
-color_palette <- "viridis" # color.palette ='YlOrRd'
-value.to.plot <- 'mean'
-legend.label <- 'Estimates'
-map.title <- NULL  # map.title= 'Prevalence for xxx'
-
-}

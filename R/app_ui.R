@@ -11,12 +11,12 @@
 library(shinydashboard)
 library(sf)
 library(magrittr)
-library(INLA)
 library(sn)
-#library(prettymapr)
-#library(mapview)
-#library(bookdown)
-#library(markdown)
+library(INLA)
+library(prettymapr)
+library(mapview)
+library(bookdown)
+library(markdown)
 
 #library(semantic.dashboard)
 
@@ -62,34 +62,40 @@ app_ui <- function(request) {
     custom_spinner("loadingSpinnerCountry", "Loading country meta data, please wait..."),
 
     # Your application UI logic
-    dashboardPage(skin = "black",
-     dashboardHeader(title = "Small Area Estimation for Improving Maternal Health in the region of Africa",titleWidth='750px'),
-      dashboardSidebar(
-       sidebarMenu(
-          menuItem("Country Specification", tabName = "country_spec", icon = icon("globe")),
-          menuItem("Data Upload", tabName = "data_upload", icon = icon("database")),
-          menuItem("Model Fitting", tabName = "model_fit", icon = icon("sliders-h")),
-          menuItem("Result Tabulation", tabName = "res_tab", icon = icon("line-chart")),
-          menuItem("Result Visualization", tabName = "res_visual", icon = icon("earth"),
-                   menuSubItem(HTML("&nbsp &nbsp &nbsp &nbsp Prevalence Map"), tabName = "res_prev_map",icon = NULL),
-                   menuSubItem(HTML("&nbsp &nbsp &nbsp &nbsp Scatter Plot"), tabName = "res_scatter",icon = NULL))
+    shinydashboard::dashboardPage(skin = "black",
+                                  shinydashboard::dashboardHeader(title = "Small Area Estimation for Improving Maternal Health in the region of Africa",titleWidth='750px'),
+                                  shinydashboard::dashboardSidebar(
+                                    shinydashboard::sidebarMenu(
+                                      shinydashboard::menuItem("Country Specification", tabName = "country_spec", icon = icon("globe")),
+                                      shinydashboard::menuItem("Data Upload", tabName = "data_upload", icon = icon("database")),
+                                      shinydashboard::menuItem("Model Fitting", tabName = "model_fit", icon = icon("sliders-h")),
+                                      shinydashboard::menuItem("Result Visualization", tabName = "res_visual", icon = icon("earth"),
+                                                               shinydashboard::menuSubItem(HTML("&nbsp &nbsp &nbsp &nbsp Prevalence Map"), tabName = "res_prev_map",icon = NULL),
+                                                               shinydashboard::menuSubItem(HTML("&nbsp &nbsp &nbsp &nbsp Map Comparison"), tabName = "res_compare_map",icon = NULL),
+                                                               shinydashboard::menuSubItem(HTML("&nbsp &nbsp &nbsp &nbsp Scatter Plot"), tabName = "res_scatter",icon = NULL),
+                                                               shinydashboard::menuSubItem(HTML("&nbsp &nbsp &nbsp &nbsp Ridge Plot"), tabName = "res_ridge",icon = NULL)),
+                                      shinydashboard::menuItem("Result Tabulation", tabName = "res_tab", icon = icon("line-chart"))
           )
       ),
-      dashboardBody(
-        tabItems(
-          tabItem(tabName = "country_spec",
+      shinydashboard::dashboardBody(
+        shinydashboard::tabItems(
+          shinydashboard::tabItem(tabName = "country_spec",
                   mod_country_specify_ui("country_specify_1")), # Use the module UI here
-          tabItem(tabName = "data_upload",
+          shinydashboard::tabItem(tabName = "data_upload",
                   mod_survey_dat_input_ui("survey_dat_input_1")),
-          tabItem(tabName = "model_fit",
+          shinydashboard::tabItem(tabName = "model_fit",
                   mod_model_selection_ui("model_selection_1")),
-          tabItem(tabName = "res_tab",
+          shinydashboard::tabItem(tabName = "res_tab",
                   mod_result_tabulate_ui("result_tabulate_1")),
           # Adding individual content for each subtab
-          tabItem(tabName = "res_prev_map",
-                  mod_res_visual_prev_map_ui("res_visual_prev_map_1")), # Content for Map subtab
-          tabItem(tabName = "res_scatter",
-                  mod_res_visual_scatter_ui("res_visual_scatter_1")) # Content for Comparison Scatter subtab
+          shinydashboard::tabItem(tabName = "res_prev_map",
+                  mod_res_visual_prev_map_ui("res_visual_prev_map_1")), # Content for Prev Map subtab
+          shinydashboard::tabItem(tabName = "res_compare_map",
+                  mod_res_visual_multiple_maps_ui("res_visual_multiple_maps_1")), # Content for Map Comparison subtab
+          shinydashboard::tabItem(tabName = "res_scatter",
+                  mod_res_visual_scatter_ui("res_visual_scatter_1")), # Content for Comparison Scatter subtab
+          shinydashboard::tabItem(tabName = "res_ridge",
+                  mod_res_visual_ridge_ui("res_visual_ridge_1")) # Content for ridge plot subtab
         )
       ),
      tags$head(tags$style(HTML("
@@ -119,10 +125,10 @@ golem_add_external_resources <- function() {
   )
 
   tags$head(
-    favicon(ext = 'png'),
+    #favicon(ext = 'png'),
     bundle_resources(
       path = app_sys("/app/www"),
-      app_title = "SurveyPrevRshiny"
+      app_title = "saeforhealth"
     ),
 
     ### add message handler

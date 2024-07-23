@@ -60,8 +60,13 @@ find_DHS_dat_name <- function(country,svy_year,
       #survey_list <- rdhs::dhs_datasets(countryIds =DHS_country_code, surveyYear = svy_year)%>%
       #dplyr::filter( FileType== recode)
 
-      }
-    return(survey_list$FileName)
+    }
+
+    if(dim(survey_list)[1]==0){
+      return('Not available')
+    }else{
+    return(survey_list$FileName)}
+
   }, error = function(e) {
     # What to do in case of error
     return(NULL)
@@ -91,7 +96,16 @@ find_recode_path <- function(recode_file=NULL,
     ### find the subfolder has the DHS data set name
     allPaths <- list.files(temp, pattern =  recode_file_prefix, full.names = TRUE, recursive = T, include.dirs = TRUE,
                            ignore.case = TRUE)
-    dirPaths <- allPaths[sapply(allPaths, function(x) file.info(x)$isdir)][1]
+
+    validPaths <- allPaths[sapply(allPaths, function(x) file.info(x)$isdir)]
+
+    #dirPaths <- allPaths[sapply(allPaths, function(x) file.info(x)$isdir)][1]
+    if (length(validPaths) > 0) {
+      dirPaths <- validPaths[which.min(nchar(validPaths))]
+    } else {
+      dirPaths <- NULL  # If no matching directories are found
+    }
+
 
 
     files_list <- lapply(extensions, function(ext) {
@@ -125,7 +139,10 @@ find_recode_path <- function(recode_file=NULL,
 #find_DHS_dat_name('Zambia',2018,recode='Individual Recode')
 
 
-
+#file_prefix <- find_DHS_dat_name('Kenya','2022',recode ='Births Recode')
+#tmp_path <-'C:/Users/wu-th/Downloads/KE_2022_DHS_05082024_189_143411.zip'
+#tmp_path <- 'E:/Dropbox/YunhanJon/JonData/KE_2022_DHS_05082024_1428_132518.zip'
+#find_recode_path(recode_file=file_prefix,file_path=tmp_path,extensions='DTA')
 
 
 
@@ -150,6 +167,11 @@ get_country_GADM <- function(country,resolution=1) {
       tmp.gadm <- sf::st_as_sf(tmp.gadm)
       tmp.gadm <- sf::st_set_crs(tmp.gadm, 4326)
 
+      n_region <- dim(tmp.gadm)[1]
+      #message(paste0('n region: ',n_region))
+      if(n_region >1000){break}
+
+
       if(levels==0){      gadm_list[['National']]  <- tmp.gadm
 }else{
       gadm_list[[paste0('Admin-',levels)]]  <- tmp.gadm}
@@ -161,6 +183,142 @@ get_country_GADM <- function(country,resolution=1) {
   return(gadm_list)
 }
 
+
+
+###############################################################
+###  load shapefile depending on source
+###############################################################
+
+get_country_shapefile <- function(country,source=NULL,...) {
+
+  if(country=='Sierra Leone'&(source!='WHO-download')){
+    source ='WHO-preload'
+  }
+
+  country_iso3 <- DHS.country.meta[DHS.country.meta$CountryName==country,'ISO3_CountryCode']
+
+  if(is.null(source)){source='GADM-download'}
+
+
+  #################
+  ### WHO preload
+  #################
+  if(source =='WHO-preload'){
+
+    WHO_shp_path <- system.file("WHO_shp", country_iso3, paste0(country_iso3,"_shp.rds"),
+                                package = "SurveyPrevRshiny")
+
+    if(WHO_shp_path==''){
+      message('No WHO shapefile, use GADM instead.')
+      source <- 'GADM-preload'
+
+    }else{
+
+      message('Loading WHO shapefile.')
+
+      country_shp <- readRDS(file=WHO_shp_path)
+      country_shp <- lapply(country_shp, function(x) {
+        sf::st_set_crs(x, 4326)
+      })
+
+      country_shp_analysis <- country_shp
+      country_shp_smoothed <- country_shp
+    }
+
+  }
+
+  #################
+  ### WHO download
+  #################
+  if(source =='WHO-download'){
+
+    WHO_shp_prepared <- tryCatch({
+      prepare_WHO_country_shp(country.ISO3=country_iso3,...
+                                            )
+    },error = function(e) {
+      message(e$message)
+      return(NULL)
+    })
+
+    if(is.null(WHO_shp_prepared)){
+      message('No WHO shapefile, use GADM instead.')
+      source <- 'GADM'
+
+    }else{
+
+      message('Loading WHO shapefile.')
+
+      country_shp_analysis <- WHO_shp_prepared
+      country_shp_smoothed <- WHO_shp_prepared
+    }
+
+
+
+
+  }
+
+
+  #################
+  ### GADM
+  #################
+
+  if(source %in% c('GADM-preload','GADM-download')){
+
+    ### check whether raw (for analysis) and smoothed (for display) shapefile exists
+
+    GADM_analysis_shp_path=''
+    GADM_display_shp_path=''
+
+    if(source =='GADM-preload'){
+
+      GADM_analysis_shp_path <- system.file("GADM_shp", country_iso3, paste0(country_iso3,"_GADM_analysis.rds"),
+                                            package = "SurveyPrevRshiny")
+      GADM_display_shp_path <- system.file("GADM_shp", country_iso3, paste0(country_iso3,"_GADM_display.rds"),
+                                           package = "SurveyPrevRshiny")
+    }
+
+    ### check whether preloaded raw shapefile exists
+
+    if(GADM_analysis_shp_path==''){
+      message('No preloaded GADM shapefile for analysis, downloading from source.')
+      country_shp_analysis <- get_country_GADM(country)
+
+    }else{
+
+      message('loading prepared GADM shapefile for analysis.')
+      country_shp_analysis <- readRDS(file=GADM_analysis_shp_path)
+      country_shp_analysis <- lapply(country_shp_analysis, function(x) {
+        sf::st_set_crs(x, 4326)
+      })
+
+    }
+
+    ### check whether preloaded smoothed shapefile exists
+    if(GADM_display_shp_path==''){
+      message('No preloaded GADM shapefile for display, downloading from source.')
+      country_shp_smoothed <- get_country_GADM(country,resolution=2)
+
+    }else{
+
+      message('loading prepared GADM shapefile for analysis.')
+      country_shp_smoothed <- readRDS(file=GADM_display_shp_path)
+      country_shp_smoothed <- lapply(country_shp_smoothed, function(x) {
+        sf::st_set_crs(x, 4326)
+      })
+
+    }
+
+
+  }
+
+
+  return.obj <- list('country_shp_analysis'=country_shp_analysis,
+                     'country_shp_smoothed'=country_shp_smoothed)
+
+}
+
+
+#tmp.mdg <- get_country_shapefile(country='Zambia',source='GADM-download')
 
 ###############################################################
 ###  check number of regions at each admin level
@@ -332,8 +490,9 @@ wide_format$AR <- wide_format$ID %in% AR_HIV
 wide_format$CR <- wide_format$ID %in% CR_couple
 
 # merge back with the information data frame
-#surveyPrev_ind_list <-  surveyPrev::surveyPrevIndicators
-full_ind_des <- merge(surveyPrev_ind_list,wide_format,by='ID',all.x=T)
+surveyPrev_ind_list <-  surveyPrev::surveyPrevIndicators
+#full_ind_des <- merge(surveyPrev_ind_list,wide_format,by='ID',all.x=T)
+full_ind_des[full_ind_des$ID=='FP_CUSA_W_MOD',]$Description <-  "Modern contraceptive prevalence rate (all women currently using any modern method of contraception)"
 
 save(full_ind_des,file='indicator_list.rda')
 

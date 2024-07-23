@@ -20,13 +20,13 @@
 ##
 golem::fill_desc(
   pkg_name = "SurveyPrevRshiny", # The Name of the package containing the App
-  pkg_title = "PKG_TITLE", # The Title of the package containing the App
-  pkg_description = "PKG_DESC.", # The Description of the package containing the App
+  pkg_title = "SurveyPrevRshiny", # The Title of the package containing the App
+  pkg_description = "The Shiny app for performing small area estimation and prevalence mapping of maternal health indicators in the region of Africa. The app is an user friendly implemtation of R package surveyPrev.", # The Description of the package containing the App
   author_first_name = "Yunhan", # Your First Name
   author_last_name = "Wu", # Your Last Name
   author_email = "yunhanwu@uw.edu", # Your Email
   repo_url = 'https://github.com/wu-thomas/SurveyPrevRShiny', # The URL of the GitHub Repo (optional),
-  pkg_version = "0.0.0.9000" # The Version of the package containing the App
+  pkg_version = "1.0.0" # The Version of the package containing the App
 )
 
 ## Set {golem} options ----

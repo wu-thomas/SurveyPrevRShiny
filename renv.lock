@@ -3256,8 +3256,13 @@
     "surveyPrev": {
       "Package": "surveyPrev",
       "Version": "1.0.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "surveyPrev",
+      "RemoteUsername": "richardli",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "a46853d5d958b8877977707a081b1ffe8150f57c",
       "Requirements": [
         "R",
         "SUMMER",
@@ -3269,6 +3274,7 @@
         "naniar",
         "raster",
         "rdhs",
+        "rlang",
         "sf",
         "sjlabelled",
         "sp",
@@ -3278,7 +3284,7 @@
         "survey",
         "tidyverse"
       ],
-      "Hash": "23da48c8f53c55fa00cc4bed2332f5fe"
+      "Hash": "2bce682fdfd1e38f7fa01f2f42874623"
     },
     "survival": {
       "Package": "survival",

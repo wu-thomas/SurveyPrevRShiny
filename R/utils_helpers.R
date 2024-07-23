@@ -97,6 +97,14 @@ showNoFileSelectedModal <- function() {
   ))
 }
 
+showDataCompleteModal <- function() {
+  showModal(modalDialog(
+    title = "Data Upload Complete",
+      "No need to upload additional data.",
+    easyClose = TRUE,
+    footer = modalButton("OK")
+  ))
+}
 
 showNoModelModal <- function() {
   showModal(modalDialog(
@@ -197,3 +205,49 @@ num_to_admin <- function(num) {
     return(NULL)
   }
 }
+
+
+
+###############################################################
+###  number of columns for arraging multiple plot
+###############################################################
+
+calculate_columns <- function(n, height_width_ratio) {
+  # Start with the assumption of square root of n as number of columns
+  best_cols = floor(sqrt(n))
+  min_diff = Inf
+
+  # Define unwanted column configurations based on the number of plots
+  unwanted_configs <- list(
+    `4` = c(3,4),
+    `5` = c(4,5),
+    `6` = c(4,5,6),
+    `7` = c(5,6,7),
+    `8` = c(5,6,7,8)
+  )
+
+  # Loop to find the optimal number of columns
+  for (cols in 1:n) {
+    # Check for unwanted configurations
+    if (as.character(n) %in% names(unwanted_configs) && cols %in% unwanted_configs[[as.character(n)]]) {
+      next  # Skip this iteration if the config is unwanted
+    }
+
+    rows = ceiling(n / cols)
+    # Calculate the aspect ratio of the overall panel
+    panel_ratio = (rows * height_width_ratio) / cols
+
+    # Calculate the difference from 1 (square aspect ratio)
+    diff = abs(panel_ratio - 1)
+
+    # Check if this configuration is closer to a square
+    if (diff < min_diff) {
+      min_diff = diff
+      best_cols = cols
+    }
+  }
+
+  return(best_cols)
+}
+
+
