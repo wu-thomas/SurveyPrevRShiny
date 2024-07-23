@@ -19,8 +19,8 @@
 ## to change the name in the app_sys() function in app_config.R /!\
 ##
 golem::fill_desc(
-  pkg_name = "SurveyPrevRshiny", # The Name of the package containing the App
-  pkg_title = "SurveyPrevRshiny", # The Title of the package containing the App
+  pkg_name = "SurveyPrevRShiny", # The Name of the package containing the App
+  pkg_title = "SurveyPrevRShiny", # The Title of the package containing the App
   pkg_description = "The Shiny app for performing small area estimation and prevalence mapping of maternal health indicators in the region of Africa. The app is an user friendly implemtation of R package surveyPrev.", # The Description of the package containing the App
   author_first_name = "Yunhan", # Your First Name
   author_last_name = "Wu", # Your Last Name

@@ -1,5 +1,5 @@
-Package: SurveyPrevRshiny
-Title: SurveyPrevRshiny
+Package: SurveyPrevRShiny
+Title: SurveyPrevRShiny
 Version: 0.0.1.0000
 Authors@R: 
     person("Yunhan", "Wu", , "yunhanwu@uw.edu", role = c("cre", "aut"))
