@@ -204,7 +204,7 @@ mod_model_selection_ui <- function(id){
                 });
                 </script>
                 ")), withMathJax(includeMarkdown(system.file("app", 'www', paste0("method_direct.rmd"),
-                                           package = "SurveyPrevRshiny")))
+                                           package = "SurveyPrevRShiny")))
                          # withMathJax(includeMarkdown("inst/app/www/method_direct.rmd"))
                  )),
 
@@ -226,7 +226,7 @@ mod_model_selection_ui <- function(id){
                 </script>
                 ")),
                           withMathJax(includeMarkdown(system.file("app", 'www', paste0("method_FH.rmd"),
-                                                 package = "SurveyPrevRshiny")))
+                                                 package = "SurveyPrevRShiny")))
                           #withMathJax(includeMarkdown("inst/app/www/method_FH.rmd"))
                  )),
 
@@ -247,7 +247,7 @@ mod_model_selection_ui <- function(id){
                 });
                 </script>
                 ")),withMathJax(includeMarkdown(system.file("app", 'www', paste0("method_unit.rmd"),
-                                                                    package = "SurveyPrevRshiny")))
+                                                                    package = "SurveyPrevRShiny")))
                             #withMathJax(includeMarkdown("inst/app/www/method_unit.rmd"))
                           ))
                )

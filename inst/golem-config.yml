@@ -1,5 +1,5 @@
 default:
-  golem_name: SurveyPrevRshiny
+  golem_name: SurveyPrevRShiny
   golem_version: 0.0.1.0000
   app_prod: no
 production:

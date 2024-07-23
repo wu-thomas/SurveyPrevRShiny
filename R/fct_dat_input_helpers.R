@@ -206,7 +206,7 @@ get_country_shapefile <- function(country,source=NULL,...) {
   if(source =='WHO-preload'){
 
     WHO_shp_path <- system.file("WHO_shp", country_iso3, paste0(country_iso3,"_shp.rds"),
-                                package = "SurveyPrevRshiny")
+                                package = "SurveyPrevRShiny")
 
     if(WHO_shp_path==''){
       message('No WHO shapefile, use GADM instead.')
@@ -272,9 +272,9 @@ get_country_shapefile <- function(country,source=NULL,...) {
     if(source =='GADM-preload'){
 
       GADM_analysis_shp_path <- system.file("GADM_shp", country_iso3, paste0(country_iso3,"_GADM_analysis.rds"),
-                                            package = "SurveyPrevRshiny")
+                                            package = "SurveyPrevRShiny")
       GADM_display_shp_path <- system.file("GADM_shp", country_iso3, paste0(country_iso3,"_GADM_display.rds"),
-                                           package = "SurveyPrevRshiny")
+                                           package = "SurveyPrevRShiny")
     }
 
     ### check whether preloaded raw shapefile exists

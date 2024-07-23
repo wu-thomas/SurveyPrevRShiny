@@ -128,14 +128,14 @@ golem_add_external_resources <- function() {
     #favicon(ext = 'png'),
     bundle_resources(
       path = app_sys("/app/www"),
-      app_title = "saeforhealth"
+      app_title = "SurveyPrevRShiny"
     ),
 
     ### add message handler
     #tags$script(src = "handlers.js"),
 
     ### add style sheets for html objects
-    #tags$link(href = "div_style.css")
+    #tags$link(href = "div_style.css"),
 
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
