@@ -339,7 +339,7 @@ mod_model_selection_server <-  function(id,CountryInfo,AnalysisInfo,parent_sessi
 
     observeEvent(input$switch_verification, {
 
-      updateTabItems(parent_session, "Overall_tabs", selected = "DHS_API_est")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "DHS_API_est")
       shinyjs::js$activateTab("tool_kit")
 
     })

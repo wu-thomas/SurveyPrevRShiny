@@ -198,7 +198,7 @@ mod_DHS_API_est_server <- function(id,CountryInfo,AnalysisInfo,parent_session){
     })
 
     observeEvent(input$switch_model_fitting, {
-      updateTabItems(parent_session, "Overall_tabs", selected = "model_fit")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "model_fit")
     })
 
     ###############################################################
@@ -254,7 +254,7 @@ mod_DHS_API_est_server <- function(id,CountryInfo,AnalysisInfo,parent_session){
 
 
     observeEvent(input$switch_instruction_tab, {
-      updateTabItems(parent_session, "Overall_tabs", selected = "get_start")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "get_start")
     })
 
 

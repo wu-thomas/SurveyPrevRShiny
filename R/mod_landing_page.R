@@ -331,12 +331,12 @@ mod_landing_page_server <- function(id,CountryInfo,AnalysisInfo,parent_session){
 
     observeEvent(input$switch_country_tab, {
       message('switching')
-      updateTabItems(parent_session, "Overall_tabs", selected = "country_spec")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "country_spec")
     })
 
     ### switch to tab with indicator supported by our app
     observeEvent(input$switch_app_ind, {
-      updateTabItems(parent_session, "Overall_tabs", selected = "indicator_in_app")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "indicator_in_app")
       shinyjs::js$activateTab("tool_kit")
     })
 
@@ -344,23 +344,23 @@ mod_landing_page_server <- function(id,CountryInfo,AnalysisInfo,parent_session){
 
     observeEvent(input$switch_data_upload, {
       message('switching')
-      updateTabItems(parent_session, "Overall_tabs", selected = "data_upload")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "data_upload")
     })
 
     observeEvent(input$switch_model_fitting, {
       #message('switching')
-      updateTabItems(parent_session, "Overall_tabs", selected = "model_fit")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "model_fit")
     })
 
     observeEvent(input$switch_res_visual, {
       #message('switching')
-      updateTabItems(parent_session, "Overall_tabs", selected = "res_prev_map")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "res_prev_map")
       shinyjs::js$activateTab("res_visual")
 
     })
 
     observeEvent(input$switch_res_tab, {
-      updateTabItems(parent_session, "Overall_tabs", selected = "res_tab")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "res_tab")
     })
 
   })

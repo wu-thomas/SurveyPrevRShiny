@@ -78,7 +78,7 @@ mod_indicator_dictionary_server <- function(id,CountryInfo,AnalysisInfo,parent_s
 
     ### switch to tab with indicator supported by our app
     observeEvent(input$switch_app_ind, {
-      updateTabItems(parent_session, "Overall_tabs", selected = "indicator_in_app")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "indicator_in_app")
       shinyjs::js$activateTab("tool_kit")
 
     })

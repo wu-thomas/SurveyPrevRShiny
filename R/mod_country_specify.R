@@ -149,7 +149,7 @@ mod_country_specify_server <- function(id,CountryInfo,AnalysisInfo,parent_sessio
 
     observeEvent(input$switch_bar, {
       message('switching')
-      updateTabItems(parent_session, "Overall_tabs", selected = "data_upload")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "data_upload")
     })
 
 
@@ -1034,7 +1034,7 @@ mod_country_specify_server <- function(id,CountryInfo,AnalysisInfo,parent_sessio
 
     ### switch to tab with indicator supported by our app
     observeEvent(input$switch_app_ind, {
-      updateTabItems(parent_session, "Overall_tabs", selected = "indicator_in_app")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "indicator_in_app")
     })
 
     ### present number of regions at each admin level

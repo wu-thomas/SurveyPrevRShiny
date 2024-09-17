@@ -95,7 +95,7 @@ mod_indicator_in_app_server <- function(id,CountryInfo,AnalysisInfo,parent_sessi
     ### switch to country specification
     observeEvent(input$switch_country_spec, {
       #message('switching')
-      updateTabItems(parent_session, "Overall_tabs", selected = "country_spec")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "country_spec")
     })
 
 
@@ -198,8 +198,8 @@ mod_indicator_in_app_server <- function(id,CountryInfo,AnalysisInfo,parent_sessi
     ### switch to tab with full list of DHS indicators
     observeEvent(input$switch_DHS_dict, {
       message('switching')
-      #updateTabItems(parent_session, "Overall_tabs", selected = "tool_kit")
-      updateTabItems(parent_session, "Overall_tabs", selected = "indicator_dictionary")
+      #shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "tool_kit")
+      shinydashboard::updateTabItems(parent_session, "Overall_tabs", selected = "indicator_dictionary")
       shinyjs::js$activateTab("tool_kit")
 
     })
