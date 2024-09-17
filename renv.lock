@@ -235,14 +235,14 @@
     },
     "SUMMER": {
       "Package": "SUMMER",
-      "Version": "1.4.0",
+      "Version": "1.4.1",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "SUMMER",
       "RemoteUsername": "richardli",
       "RemoteRef": "HEAD",
-      "RemoteSha": "83f7dc0e022bbc0abcbfbddc7a20364d572e327d",
+      "RemoteSha": "716460ec72d1a21e4664e315af2903d5a3ab4204",
       "Requirements": [
         "Matrix",
         "R",
@@ -267,7 +267,7 @@
         "utils",
         "viridis"
       ],
-      "Hash": "a60735e3cb18968cff76d1946a353303"
+      "Hash": "8c3205f3626f1a37550005c4ca12ae28"
     },
     "SparseM": {
       "Package": "SparseM",
@@ -3262,13 +3262,14 @@
       "RemoteRepo": "surveyPrev",
       "RemoteUsername": "richardli",
       "RemoteRef": "HEAD",
-      "RemoteSha": "a46853d5d958b8877977707a081b1ffe8150f57c",
+      "RemoteSha": "e5a603e430ff4fda992c4aa55612cb83e9681296",
       "Requirements": [
         "R",
         "SUMMER",
         "data.table",
         "dplyr",
         "ggplot2",
+        "ggridges",
         "labelled",
         "matrixStats",
         "naniar",
@@ -3284,7 +3285,22 @@
         "survey",
         "tidyverse"
       ],
-      "Hash": "2bce682fdfd1e38f7fa01f2f42874623"
+      "Hash": "3b0c3cfa64151776adcfdc4ae31b58f6"
+    },
+    "surveyPrevGithub": {
+      "Package": "surveyPrevGithub",
+      "Version": "0.0.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "surveyPrevGithub",
+      "RemoteUsername": "qianyu313",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "da51a7176f939b55231e414bf9166ce1d6212d9e",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "398a16005bd309edd9fc7b69048be93b"
     },
     "survival": {
       "Package": "survival",

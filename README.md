@@ -11,8 +11,7 @@ using data from Demographic and Health Surveys (DHS). Powered by the R
 package SurveyPrev, our Shiny app revolutionizes the acquisition of
 prevalence estimates through Small Area Estimation (SAE) techniques. It
 is tailored for users of all backgrounds, enabling the performance of
-complex statistical analyses without prior knowledge spatial data
-management or modelling.
+complex statistical analyses without prior knowledge.
 
 The application streamlines the analytical process into clear,
 manageable steps. It guides users through model fitting and enhances
@@ -23,8 +22,12 @@ interface. Additionally, the application supports result exports,
 facilitating detailed examinations and sharing in both spreadsheet and
 graphical formats.
 
+Please visit our
+<a href="https://wu-thomas.github.io/surveyPrev_website/"
+target="_blank">official website</a> for detailed documentation.
+
 The Github repo maintains the source code for this RShiny application
-and it is structured as an R package. There are three primary venues to
+and it is structured as an R package. There are two primary venues to
 utilize this application:
 
 1.  **Web-Based Version**:

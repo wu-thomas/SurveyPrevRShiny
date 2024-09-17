@@ -9,3 +9,4 @@ inst/GADM_shp
 inst/WHO_shp
 rosm.cache/
 SurveyPrevRshiny.Rproj
+data/indicators_full.csv

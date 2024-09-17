@@ -664,3 +664,255 @@ if(FALSE){
 }
 
 
+###############################################################
+###  create example data frame for recode
+###############################################################
+
+if(FALSE){
+
+  IR_Individual <- c( "RH_ANCN_W_N4P",  "AN_ANEM_W_ANY",
+                      "FP_NADA_W_UNT", "FP_CUSA_W_MOD", "AN_NUTS_W_THN","HA_HIVP_B_HIV")
+  PR_Household_Member <- c("CN_ANMC_C_ANY", "CN_NUTS_C_WH2", "CN_NUTS_C_HA2",
+                           "WS_TLET_H_IMP", "WS_TLET_P_BAS",
+                           "WS_SRCE_P_BAS")
+  KR_Children <- c("CH_DIAT_C_ORT", "CH_VACC_C_DP3", "CH_VACC_C_DP1",
+                   "CH_VACC_C_BAS", "CH_VACC_C_NON", "CN_BRFS_C_EXB", "CH_VACC_C_MSL"
+  )
+  BRdata_Birth <- c("RH_DELA_C_SKP", "CM_ECMR_C_NNR")
+  HRdata_Household <- c("ML_NETP_H_IT2")
+
+  MR_men <- c("HA_HIVP_B_HIV")
+  AR_HIV<- c("HA_HIVP_B_HIV")
+  CR_couple<- NA
+
+
+  # Combine all indicators into a single vector and create a data frame
+  all_indicators <- unique(c(IR_Individual, PR_Household_Member, KR_Children, BRdata_Birth, HRdata_Household,MR_men))
+  wide_format <- data.frame(ID = all_indicators, stringsAsFactors = FALSE)
+
+  # Create columns for each data type and check if the indicator belongs to that type
+  wide_format$IR <- wide_format$ID %in% IR_Individual
+  wide_format$PR <- wide_format$ID %in% PR_Household_Member
+  wide_format$KR <- wide_format$ID %in% KR_Children
+  wide_format$BR <- wide_format$ID %in% BRdata_Birth
+  wide_format$HR <- wide_format$ID %in% HRdata_Household
+  wide_format$MR <- wide_format$ID %in% MR_men
+  wide_format$AR <- wide_format$ID %in% AR_HIV
+  wide_format$CR <- wide_format$ID %in% CR_couple
+
+  # merge back with the information data frame
+  surveyPrev_ind_list <-  surveyPrev::surveyPrevIndicators
+  #full_ind_des <- merge(surveyPrev_ind_list,wide_format,by='ID',all.x=T)
+  full_ind_des[full_ind_des$ID=='FP_CUSA_W_MOD',]$Description <-  "Modern contraceptive prevalence rate (all women currently using any modern method of contraception)"
+
+  save(full_ind_des,file='indicator_list.rda')
+
+  #recode_list <- c('IR','PR','KR','BR','HR','MR','AR','CR')
+  #recode_list[which(wide_format[7,recode_list]==T)]
+  #recode_list[which(full_ind_des[full_ind_des$ID=='HA_HIVP_B_HIV',recode_list]==T)]
+}
+
+
+###############################################################
+###  create DHS chapter Info
+###############################################################
+
+if(FALSE){
+
+  dhs_chapters <- data.frame(
+    Chapter = c(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
+    Title = c("Housing Characteristics And Household Population",
+              "Characteristics Of Respondents",
+              "Marriage And Sexual Activity",
+              "Fertility",
+              "Fertility Preferences",
+              "Family Planning",
+              "Infant And Child Mortality",
+              "Maternal Health",
+              "Child Health",
+              "Nutrition Of Children And Adults",
+              "Malaria",
+              "HIV/AIDS-Related Knowledge, Attitudes, And Behaviour",
+              "HIV Prevalence",
+              "Women's Empowerment",
+              "Adult And Maternal Mortality",
+              "Domestic Violence",
+              "Female Genital Cutting",
+              "Fistula"),
+    Acronym = c("PH", "RC", "MS", "FE", "FF", "FP", "CM", "RH", "CH", "NT", "ML", "HK", "HV", "WE", "AM", "DV", "FG", "FS")
+  )
+
+}
+
+
+###############################################################
+###  create ref tab for newly added indicators
+###############################################################
+
+
+if(FALSE){
+
+  #match_all_result <- surveyPrevGithub::match_all_result
+
+  ID <- match_all_result$indicator_ID_DHS
+  Description <- match_all_result$DHS_label
+  Full_definition <- match_all_result$DHS_definition
+  #Chap_abbrev <-  toupper(substr(match_all_result$indicator_ID_Github_raw, start = 1, stop = 2))
+  Chap_abbrev <- sapply(match_all_result$indicator_chapter, function(x) strsplit(x, "_")[[1]][2], USE.NAMES=FALSE)
+
+  ref_tab_new <- data.frame(ID=ID,
+                            Description= Description,
+                            Full_definition=Full_definition,
+                            Chap_abbrev= Chap_abbrev,
+                            recode = match_all_result$batch_recode_group
+  )
+
+  ref_tab_new <- merge(ref_tab_new,dhs_chapters,by.x='Chap_abbrev',by.y='Acronym',all.x=T)
+  ref_tab_new$Topic <- ref_tab_new$Title
+
+  ref_tab_new$IR <- grepl('IR', ref_tab_new$recode)
+  ref_tab_new$PR <- grepl('PR', ref_tab_new$recode)
+  ref_tab_new$KR <- grepl('KR', ref_tab_new$recode)
+  ref_tab_new$BR <- grepl('BR', ref_tab_new$recode)
+  ref_tab_new$HR <- grepl('HR', ref_tab_new$recode)
+  ref_tab_new$MR <- grepl('MR', ref_tab_new$recode)
+  ref_tab_new$AR <- grepl('AR', ref_tab_new$recode)
+  ref_tab_new$CR <- grepl('CR', ref_tab_new$recode)
+
+  ref_tab_new <- ref_tab_new[,c('ID', "Description","Full_definition","Topic" , "Chap_abbrev",
+                                "IR", "PR" ,"KR", "BR", "HR","MR", "AR", "CR")]
+
+
+
+  save(ref_tab_new,file='data/indicator_list_new.rda')
+
+  #recode_list <- c('IR','PR','KR','BR','HR','MR','AR','CR')
+  #recode_list[which(wide_format[7,recode_list]==T)]
+  #recode_list[which(full_ind_des[full_ind_des$ID=='HA_HIVP_B_HIV',recode_list]==T)]
+}
+
+
+###############################################################
+###  create ref tab for initial 20 indicators
+###############################################################
+
+
+if(FALSE){
+
+  ref_tab_22 <- SurveyPrevRShiny::full_ind_des
+  ref_tab_22$Full_definition <- ref_tab_22$Description
+
+  ref_tab_22$Chap_abbrev <- c(rep('NT',times=2),
+                              rep('CH',times=6),
+                              rep('CM',times=1),
+                              rep('NT',times=4),
+                              rep('FP',times=2),
+                              rep('HV',times=1),
+                              rep('ML',times=1),
+                              rep('RH',times=2),
+                              rep('PH',times=3))
+
+  ref_tab_22$Topic <- c(rep('Nutrition Of Children And Adults',times=2),
+                        rep('Child Health',times=6),
+                        rep('Infant And Child Mortality',times=1),
+                        rep('Nutrition Of Children And Adults',times=4),
+                        rep('Family Planning',times=2),
+                        rep('HIV Prevalence',times=1),
+                        rep('Malaria',times=1),
+                        rep('Maternal Health',times=2),
+                        rep('Housing Characteristics And Household Population',times=3))
+
+  ref_tab_22 <- ref_tab_22[,c('ID', "Description","Full_definition","Topic" , "Chap_abbrev",
+                              "IR", "PR" ,"KR", "BR", "HR","MR", "AR", "CR")]
+
+  save(ref_tab_22,file='data/indicator_list_22.rda')
+
+  #recode_list <- c('IR','PR','KR','BR','HR','MR','AR','CR')
+  #recode_list[which(wide_format[7,recode_list]==T)]
+  #recode_list[which(full_ind_des[full_ind_des$ID=='HA_HIVP_B_HIV',recode_list]==T)]
+}
+
+
+###############################################################
+###  merge new and old indicators
+###############################################################
+
+if(FALSE){
+  library(surveyPrevGithub)
+}
+
+
+if(FALSE){
+  ref_tab_new_no_dup <- ref_tab_new[!ref_tab_new$ID %in% ref_tab_22$ID,]
+  ref_tab_all <- rbind(ref_tab_22,ref_tab_new_no_dup)
+
+
+  ref_tab_all <- merge(ref_tab_all,dhs_chapters,
+                       by.x='Chap_abbrev',
+                       by.y='Acronym',
+                       all.x=T)
+
+  ref_tab_all <- ref_tab_all[ref_tab_all$Chap_abbrev!='DV',]
+
+
+  ref_tab_all$Topic <- paste0('Chapter ',formatC(ref_tab_all$Chapter, width = 2, format = "d", flag = "0"),
+                              ' - ',ref_tab_all$Title)
+  #save(ref_tab_all,file='data/indicator_list_all.rda')
+
+  #write.csv(ref_tab_all[,c(1:5)],row.names = F,file='indicator_list_0916.csv')
+}
+
+
+
+#######################################################################
+###  prepare DHS estimates for all surveys for supported indicators
+#######################################################################
+
+if(FALSE){
+  dhs_survey_list <- rdhs::dhs_surveys()
+  dhs_survey_list <- dhs_survey_list[dhs_survey_list$SurveyYear>2000 & dhs_survey_list$SurveyType== 'DHS',]
+
+  res_ind_supported <- data.frame()
+
+  for (i in 1:dim(dhs_survey_list)[1]){
+    print(i)
+    tmp_cty_code <- dhs_survey_list$DHS_CountryCode[i]
+    tmp_svy_year <- dhs_survey_list$SurveyYear[i]
+    print(paste0(dhs_survey_list$DHS_CountryCode[i],dhs_survey_list$SurveyYear[i]))
+
+
+    cty_svy_res_file <- paste0('E:/Dropbox/YunhanJon/DHS-indicators/Step_3_Data/all_survey_est/',
+                               tmp_cty_code,'_',tmp_svy_year,'_DHS_est.rda')
+
+    if(!file.exists(cty_svy_res_file)){
+
+
+      tmp_call <- paste0("https://api.dhsprogram.com/rest/dhs/data?countryIds=",tmp_cty_code,"&surveyYear=",tmp_svy_year,"&perpage=10000&f=csv")
+      tmp_res <- read.csv(tmp_call)
+
+
+      print('done')
+      save(tmp_res,file=paste0('E:/Dropbox/YunhanJon/DHS-indicators/Step_3_Data/all_survey_est/',
+                               tmp_cty_code,'_',tmp_svy_year,'_DHS_est.rda'))
+
+    }else{
+
+      load(cty_svy_res_file)
+    }
+
+    tmp_res <- tmp_res[tmp_res$IndicatorId %in% ref_tab_all$ID,  ]
+    res_ind_supported <- rbind(res_ind_supported,tmp_res)
+
+  }
+
+
+  DHS_api_est <- res_ind_supported[,c('IndicatorId','Indicator','Value','DHS_CountryCode',
+                                      'CountryName','SurveyYear','ByVariableLabel')]
+
+  colnames(DHS_api_est) <- c('DHS Standard ID','Definition','Estimate','Country Code','Country','Survey Year','By Variable Label')
+  DHS_api_est <- DHS_api_est[,c('Country','Country Code','Survey Year','DHS Standard ID','Definition','Estimate','By Variable Label')]
+  #save(DHS_api_est,file='data/DHS_api_est.rda')
+
+
+}
+

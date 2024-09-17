@@ -35,6 +35,7 @@ attachment::att_amend_desc(must.exist = F,update.config = TRUE)
 ############################################################
 
 ### Data Input
+golem::add_module(name = "landing_page", with_test = F)
 golem::add_module(name = "country_specify", with_test = F)
 golem::add_module(name = "survey_dat_input", with_test = F)
 golem::add_module(name = "model_selection", with_test = F)
@@ -43,6 +44,9 @@ golem::add_module(name = "res_visual_prev_map", with_test = F)
 golem::add_module(name = "res_visual_multiple_maps", with_test = F)
 golem::add_module(name = "res_visual_scatter", with_test = F)
 golem::add_module(name = "res_visual_ridge", with_test = F)
+golem::add_module(name = "indicator_in_app", with_test = F)
+golem::add_module(name = "indicator_dictionary", with_test = F)
+golem::add_module(name = "DHS_API_est", with_test = F)
 
 
 golem::add_fct("dat_input_helpers", with_test = F)
@@ -81,7 +85,7 @@ usethis::use_test("app")
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("SurveyPrevRshiny")
+usethis::use_vignette("SurveyPrevRShiny")
 devtools::build_vignettes()
 
 ## Code Coverage----

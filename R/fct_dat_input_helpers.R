@@ -191,7 +191,7 @@ get_country_GADM <- function(country,resolution=1) {
 
 get_country_shapefile <- function(country,source=NULL,...) {
 
-  if(country=='Sierra Leone'&(source!='WHO-download')){
+  if(country=='Sierra Leone'&&(source!='WHO-download')){
     source ='WHO-preload'
   }
 
@@ -453,51 +453,9 @@ measure_response_time <- function() {
 response_time <- measure_response_time()
 }
 
-###############################################################
-###  create example data frame for recode
-###############################################################
-
-if(FALSE){
-
-IR_Individual <- c( "RH_ANCN_W_N4P",  "AN_ANEM_W_ANY",
-                    "FP_NADA_W_UNT", "FP_CUSA_W_MOD", "AN_NUTS_W_THN","HA_HIVP_B_HIV")
-PR_Household_Member <- c("CN_ANMC_C_ANY", "CN_NUTS_C_WH2", "CN_NUTS_C_HA2",
-                         "WS_TLET_H_IMP", "WS_TLET_P_BAS",
-                         "WS_SRCE_P_BAS")
-KR_Children <- c("CH_DIAT_C_ORT", "CH_VACC_C_DP3", "CH_VACC_C_DP1",
-                 "CH_VACC_C_BAS", "CH_VACC_C_NON", "CN_BRFS_C_EXB", "CH_VACC_C_MSL"
-                 )
-BRdata_Birth <- c("RH_DELA_C_SKP", "CM_ECMR_C_NNR")
-HRdata_Household <- c("ML_NETP_H_IT2")
-
-MR_men <- c("HA_HIVP_B_HIV")
-AR_HIV<- c("HA_HIVP_B_HIV")
-CR_couple<- NA
 
 
-# Combine all indicators into a single vector and create a data frame
-all_indicators <- unique(c(IR_Individual, PR_Household_Member, KR_Children, BRdata_Birth, HRdata_Household,MR_men))
-wide_format <- data.frame(ID = all_indicators, stringsAsFactors = FALSE)
 
-# Create columns for each data type and check if the indicator belongs to that type
-wide_format$IR <- wide_format$ID %in% IR_Individual
-wide_format$PR <- wide_format$ID %in% PR_Household_Member
-wide_format$KR <- wide_format$ID %in% KR_Children
-wide_format$BR <- wide_format$ID %in% BRdata_Birth
-wide_format$HR <- wide_format$ID %in% HRdata_Household
-wide_format$MR <- wide_format$ID %in% MR_men
-wide_format$AR <- wide_format$ID %in% AR_HIV
-wide_format$CR <- wide_format$ID %in% CR_couple
 
-# merge back with the information data frame
-surveyPrev_ind_list <-  surveyPrev::surveyPrevIndicators
-#full_ind_des <- merge(surveyPrev_ind_list,wide_format,by='ID',all.x=T)
-full_ind_des[full_ind_des$ID=='FP_CUSA_W_MOD',]$Description <-  "Modern contraceptive prevalence rate (all women currently using any modern method of contraception)"
 
-save(full_ind_des,file='indicator_list.rda')
-
-#recode_list <- c('IR','PR','KR','BR','HR','MR','AR','CR')
-#recode_list[which(wide_format[7,recode_list]==T)]
-#recode_list[which(full_ind_des[full_ind_des$ID=='HA_HIVP_B_HIV',recode_list]==T)]
-}
 
