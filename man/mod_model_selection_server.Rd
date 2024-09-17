@@ -4,7 +4,7 @@
 \alias{mod_model_selection_server}
 \title{model selection Server Functions}
 \usage{
-mod_model_selection_server(id, CountryInfo, AnalysisInfo)
+mod_model_selection_server(id, CountryInfo, AnalysisInfo, parent_session)
 }
 \description{
 A fct function

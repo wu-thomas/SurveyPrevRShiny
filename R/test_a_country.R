@@ -664,7 +664,7 @@ if(FALSE){
   strat.gadm.level <- 1
 
   ### indicator
-  ex.indicator.abbrev <-'FP_CUSA_W_MOD'
+  ex.indicator.abbrev <-'FP_CUSA_W_IUD'
   #file_path <-'C:/Users/wu-th/Downloads/KE_2022_DHS_04132024_852_143411.zip'
   #file_path <-'C:/Users/wu-th/Downloads/RW_2019-20_DHS_04082024_724_143411.zip'
   #file_path <-'C:/Users/wu-th/Downloads/RW_2019-20_dat.zip'
@@ -713,11 +713,11 @@ if(FALSE){
                          "Births Recode","Household Recode","Men's Recode",
                          "HIV Test Results Recode","Couples' Recode")
 
-  recode_for_ind_abbrev(recode_list_abbrev[which(full_ind_des[full_ind_des$ID==CountryInfo$svy_indicator_var(),
+  recode_for_ind_abbrev(recode_list_abbrev[which(ref_tab_all[ref_tab_all$ID==CountryInfo$svy_indicator_var(),
                                                               recode_list_abbrev]==T)])
 
   ### which recode (full names) are needed for this indicator
-  recode_for_ind_names(recode_list_names[which(full_ind_des[full_ind_des$ID==CountryInfo$svy_indicator_var(),
+  recode_for_ind_names(recode_list_names[which(ref_tab_all[ref_tab_all$ID==CountryInfo$svy_indicator_var(),
                                                             recode_list_abbrev]==T)])
 
   ### load survey data
@@ -771,6 +771,10 @@ if(FALSE){
     svy_dat_recode <- svy_dat_list[[recode_for_ind_abbrev()]]
 
   }
+
+  analysis_dat_fun =  getFromNamespace(CountryInfo$svy_indicator_var(), "surveyPrevGithub")
+
+
 
   analysis_dat <- surveyPrev::getDHSindicator(Rdata=svy_dat_recode,
                                               indicator = CountryInfo$svy_indicator_var())

@@ -51,7 +51,10 @@ Imports:
     SUMMER,
     survey,
     tidyr,
-    viridisLite
+    viridisLite,
+    labelled (== 2.12.0), 
+    naniar, 
+    sjlabelled
 Remotes:
     statnmap/HatchedPolygons,
     rspatial/geodata,
