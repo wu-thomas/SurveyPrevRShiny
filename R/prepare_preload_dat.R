@@ -51,24 +51,24 @@ tryCatch({
 
 })
 }
-### use backup
+### use pre-stored meta data
 pkg_files <- list.files('data')
 filtered_files <- grep("^DHS_meta_preload_", pkg_files, value = TRUE)# Filter files that start with 'DHS_meta_preload_'
 
 load(file=paste0('data/',filtered_files))
-
-DHS.country.meta <- DHS.country.meta.preload
-DHS.country.meta[DHS.country.meta$CountryName=='Tanzania',]$CountryName <-'United Republic of Tanzania'
-DHS.country.meta[DHS.country.meta$CountryName=='Congo Democratic Republic',]$CountryName <-'Democratic Republic of the Congo'
-
-
-DHS.survey.meta <- DHS.survey.meta.preload
-DHS.survey.meta[DHS.survey.meta$CountryName=='Tanzania',]$CountryName <-'United Republic of Tanzania'
-DHS.survey.meta[DHS.survey.meta$CountryName=='Congo Democratic Republic',]$CountryName <-'Democratic Republic of the Congo'
-
-DHS.dataset.meta <- DHS.dataset.meta.preload
-DHS.dataset.meta[DHS.dataset.meta$CountryName=='Tanzania',]$CountryName <-'United Republic of Tanzania'
-DHS.dataset.meta[DHS.dataset.meta$CountryName=='Congo Democratic Republic',]$CountryName <-'Democratic Republic of the Congo'
+#
+# DHS.country.meta <- DHS.country.meta.preload
+# DHS.country.meta[DHS.country.meta$CountryName=='Tanzania',]$CountryName <-'United Republic of Tanzania'
+# DHS.country.meta[DHS.country.meta$CountryName=='Congo Democratic Republic',]$CountryName <-'Democratic Republic of the Congo'
+#
+#
+# DHS.survey.meta <- DHS.survey.meta.preload
+# DHS.survey.meta[DHS.survey.meta$CountryName=='Tanzania',]$CountryName <-'United Republic of Tanzania'
+# DHS.survey.meta[DHS.survey.meta$CountryName=='Congo Democratic Republic',]$CountryName <-'Democratic Republic of the Congo'
+#
+# DHS.dataset.meta <- DHS.dataset.meta.preload
+# DHS.dataset.meta[DHS.dataset.meta$CountryName=='Tanzania',]$CountryName <-'United Republic of Tanzania'
+# DHS.dataset.meta[DHS.dataset.meta$CountryName=='Congo Democratic Republic',]$CountryName <-'Democratic Republic of the Congo'
 
 #message(list.files('data'))
 #message(list.files('data/GADM_shp'))
@@ -123,14 +123,26 @@ if(FALSE){
   #DHS.dataset.meta.preload <- rdhs::dhs_datasets()
 
 
+  ### post process
+  DHS.country.meta <- DHS.country.meta.preload
+  DHS.country.meta[DHS.country.meta$CountryName=='Tanzania',]$CountryName <-'United Republic of Tanzania'
+  DHS.country.meta[DHS.country.meta$CountryName=='Congo Democratic Republic',]$CountryName <-'Democratic Republic of the Congo'
+
+
+  DHS.survey.meta <- DHS.survey.meta.preload
+  DHS.survey.meta[DHS.survey.meta$CountryName=='Tanzania',]$CountryName <-'United Republic of Tanzania'
+  DHS.survey.meta[DHS.survey.meta$CountryName=='Congo Democratic Republic',]$CountryName <-'Democratic Republic of the Congo'
+
+  DHS.dataset.meta <- DHS.dataset.meta.preload
+  DHS.dataset.meta[DHS.dataset.meta$CountryName=='Tanzania',]$CountryName <-'United Republic of Tanzania'
+  DHS.dataset.meta[DHS.dataset.meta$CountryName=='Congo Democratic Republic',]$CountryName <-'Democratic Republic of the Congo'
 
   formatted_date <- format(Sys.Date(), "%m%d%Y")
 
-  setwd('data/')
-  save(DHS.country.meta.preload,DHS.survey.meta.preload,DHS.dataset.meta.preload,file=paste0('DHS_meta_preload_',formatted_date,'.rda'))
+  save(DHS.country.meta,DHS.survey.meta,DHS.dataset.meta,file=paste0('data/DHS_meta_preload_',formatted_date,'.rda'))
+
 
 }
-
 
 ###############################################################
 ### prepare preloaded GADM shapefile

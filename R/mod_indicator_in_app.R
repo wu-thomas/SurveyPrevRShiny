@@ -102,7 +102,14 @@ mod_indicator_in_app_server <- function(id,CountryInfo,AnalysisInfo,parent_sessi
     ###############################################################
     ### table for selected indicator
     ###############################################################
-
+    # "<p style='font-size: medium;margin-top:10px;'>",
+    # "<span style='font-weight: bold; color: #FF0000;'>*</span> ",
+    # "For indicators that apply to multiple timeframes",
+    # "or where the number of years preceding the survey is not explicitly defined,",
+    # "we default to using data from the 5-year period preceding the survey, unless otherwise specified.",
+    # "For indicators that can be stratified by age groups,",
+    # "the default is to use data for the total population or unstratified groups (e.g., women aged 15-49), unless stated differently.",
+    # "</p>"
     output$selected_ind_UI <- renderUI({
 
       if(is.null(CountryInfo$svyYear_selected())| CountryInfo$svyYear_selected()==''){
@@ -111,6 +118,14 @@ mod_indicator_in_app_server <- function(id,CountryInfo,AnalysisInfo,parent_sessi
         if (!is.null(CountryInfo$svy_indicator_var())){
           tagList(
             DT::DTOutput(ns("selected_ind_tab")),
+            HTML(paste0("<p style='font-size: medium; margin-top:10px;'>",
+                        "<span style='font-weight: bold; color: #FF0000;'>*</span> ",
+                        "For indicators that apply to multiple timeframes ",
+                        "and the number of years preceding the survey is not explicitly specified, ",
+                        "we default to using data from the 5-year period preceding the survey. ",
+                        "For indicators that can be stratified by age groups, ",
+                        "we default to total population or unstratified groups (e.g., women aged 15-49), unless stated differently.",
+                        "</p>")),
             tags$hr(style="border-top-color: #E0E0E0;")  # Add your customized hr below the table
           )
 

@@ -680,9 +680,9 @@ mod_survey_dat_input_server <- function(id,CountryInfo,AnalysisInfo){
           library(sjlabelled)
           library(dplyr)
 
-          print(analysis_dat_fun)
+          library(data.table)
           analysis_dat = surveyPrev::getDHSindicator(Rdata=svy_dat_recode, indicator = NULL, FUN =analysis_dat_fun)
-
+          detach("package:data.table", unload=TRUE)
         }else{
 
           analysis_dat <- surveyPrev::getDHSindicator(Rdata=svy_dat_recode,

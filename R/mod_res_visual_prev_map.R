@@ -125,7 +125,7 @@ mod_res_visual_prev_map_server <- function(id,CountryInfo,AnalysisInfo){
         " Survey Year: <span style='font-weight:bold;background-color: #D0E4F7;'>", svy_year, "</span>.",
         "<br>",
         "Indicator: <span style='font-weight:bold;background-color: #D0E4F7;'>", CountryInfo$svy_indicator_des(),
-        "<p>",
+        "</span>.</p>",
         "<hr style='border-top-color: #E0E0E0;'>"
       ))
 

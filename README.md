@@ -69,6 +69,8 @@ devtools::install_github("rspatial/geodata")
 devtools::install_github("richardli/SUMMER")
 devtools::install_github("richardli/surveyPrev")
 devtools::install_github("statnmap/HatchedPolygons")
+devtools::install_github("qianyu313/surveyPrevGithub")
+
 install.packages("INLA",repos=c(getOption("repos"),
                         INLA="https://inla.r-inla-download.org/R/testing"),dep=TRUE)
 ```
@@ -77,6 +79,13 @@ You can then install the development version of saeforhealth with:
 
 ``` r
 devtools::install_github("wu-thomas/SurveyPrevRShiny")
+```
+
+Our tool depends specifically on 2.12.0 version of the labelled package,
+so we make sure the correct version is used.
+
+``` r
+remotes::install_version("labelled", "2.12.0")
 ```
 
 You can launch the RShiny app with the following command, and we

@@ -129,7 +129,9 @@ border: 1px solid #666666}
                                            tags$li(tags$b("Provide project information"),": Complete the forms with specific details about the project."),
                                            tags$li(tags$b("Request survey access"), ": Post-registration, formally request access to the country/year specific survey datasets. Be sure to request ",
                                                    tags$b("GPS data"), "; approval typically occurs within 48 hours.")
-                                   )
+                                   ) #,
+                                   #"<p>",
+                                   #"Additionally, download <strong>WHO shapefiles</strong> from the WHO GIS Hub. Please reference the <strong>implementation guide</strong> for detailed instructions.</p>"
                                  ))
                         )
     )

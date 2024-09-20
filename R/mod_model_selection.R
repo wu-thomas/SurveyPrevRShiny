@@ -310,7 +310,7 @@ mod_model_selection_server <-  function(id,CountryInfo,AnalysisInfo,parent_sessi
         "Selected Country: <span style='font-weight:bold;'>", country, "</span>.",
         " Survey Year: <span style='font-weight:bold;'>", svy_year, "</span>.",
         "<br>",
-        "Indicator: <span style='font-weight:bold;'>", CountryInfo$svy_indicator_des(),
+        "Indicator: <span style='font-weight:bold;'>", CountryInfo$svy_indicator_des(),"</span>.",
         #" at <span style='font-weight:bold;'>", concatenate_vector_with_and(CountryInfo$GADM_analysis_levels()), "</span> level(s).",
         "<br><span style='font-weight:bold;background-color:#F2DF8D'>",
         "Before starting the analysis, please check the app's national estimates for consistency with the DHS final report in the ",

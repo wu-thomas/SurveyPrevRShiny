@@ -52,7 +52,6 @@ Imports:
     survey,
     tidyr,
     viridisLite,
-    labelled (== 2.12.0), 
     naniar, 
     sjlabelled
 Remotes:
